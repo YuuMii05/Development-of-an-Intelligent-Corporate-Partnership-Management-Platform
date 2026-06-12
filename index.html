@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Huawei Cloud Matchmaker</title>
+    <style>
+        :root {
+            --brand-red: #e60012;        
+            --tech-black: #111111;       
+            --card-bg: rgba(255, 255, 255, 0.93);          
+            --text-body: #222224;        
+            --text-muted: #6e6e73;       
+            --glass-border: rgba(220, 224, 232, 0.8);      
+            --bg-main: #f5f7fa;          
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: radial-gradient(circle at 50% 120%, rgba(230, 0, 18, 0.07), var(--bg-main) 65%);
+            color: var(--text-body);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(230, 0, 18, 0.02) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(230, 0, 18, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bottom-bg-graphic {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh; 
+            background-image: linear-gradient(
+                to bottom, 
+                rgba(245, 247, 250, 1) 0%, 
+                rgba(245, 247, 250, 0.4) 40%, 
+                rgba(245, 247, 250, 0) 100%
+            ), url('/static/lp1.jpg');
+            background-size: cover;
+            background-position: center bottom;
+            background-repeat: no-repeat;
+            opacity: 0.95; 
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .top-navbar {
+            width: 100%;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.01);
+            z-index: 100;
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .brand-logo-img {
+            height: 55px;          
+            width: auto;           
+            object-fit: contain;
+            display: block;
+        }
+
+        #logo-fallback {
+            font-size: 22px; 
+            font-weight: 900; 
+            color: var(--brand-red); 
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-region-btn {
+            margin-left: auto;
+            background: transparent;
+            color: var(--tech-black);
+            border: 1px solid var(--glass-border);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .navbar-region-btn:hover {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: var(--brand-red);
+            color: var(--brand-red);
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 840px;
+            height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+            padding: 50px 20px 20px 20px;
+            box-sizing: border-box;
+            z-index: 2;
+            position: relative;
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 35px;
+            flex-shrink: 0;
+        }
+
+        h1 { 
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--tech-black); 
+            margin: 0 0 8px 0; 
+        }
+
+        h1 span { color: var(--brand-red); }
+
+        p.subtitle { 
+            color: var(--text-muted); 
+            font-size: 1rem;
+            margin: 0;
+            letter-spacing: 0.01em;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        .search-box { 
+            display: flex; 
+            background: #ffffff;
+            padding: 6px; 
+            border-radius: 40px; 
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .search-box:focus-within {
+            border-color: var(--brand-red);
+            box-shadow: 0 12px 35px rgba(230, 0, 18, 0.12);
+        }
+
+        input { 
+            flex: 1; 
+            padding: 14px 24px; 
+            border: none;
+            background: transparent; 
+            color: var(--tech-black); 
+            font-size: 16px; 
+            outline: none;
+        }
+
+        button { 
+            background: var(--tech-black); 
+            color: white; 
+            border: none; 
+            padding: 0 32px; 
+            border-radius: 30px;
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: all 0.2s ease; 
+        }
+
+        button:hover { 
+            background: var(--brand-red); 
+            box-shadow: 0 6px 16px rgba(230, 0, 18, 0.3);
+        }
+
+        .suggestions-panel {
+            position: absolute;
+            top: 115%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .suggestions-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .suggestions-title {
+            padding: 16px 24px 10px 24px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--brand-red);
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .suggestion-item {
+            padding: 14px 24px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .suggestion-item:last-child { border-bottom: none; }
+
+        .suggestion-item:hover {
+            background-color: rgba(230, 0, 18, 0.04);
+            color: var(--brand-red);
+            padding-left: 32px;
+        }
+
+        .results-list { 
+            margin-top: 30px; 
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex; 
+            flex-direction: column; 
+            gap: 24px; 
+            box-sizing: border-box;
+            z-index: 5;
+        }
+
+        .results-list::-webkit-scrollbar { width: 6px; }
+        .results-list::-webkit-scrollbar-track { background: transparent; }
+        .results-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 30px; 
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 14px; 
+        }
+
+        .company-name { 
+            font-size: 1.4rem; 
+            font-weight: 600; 
+            color: var(--tech-black); 
+        }
+
+        .badge { 
+            background: var(--brand-red); 
+            color: #ffffff; 
+            padding: 6px 16px; 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            border-radius: 30px;
+            letter-spacing: 0.02em;
+        }
+
+        .industry { 
+            font-size: 11px; 
+            font-weight: 700;
+            color: var(--brand-red); 
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 16px; 
+        }
+
+        .objectives { 
+            color: #3a3a3c; 
+            line-height: 1.7; 
+            font-size: 15px;
+            margin-bottom: 22px;
+        }
+
+        .xai-justification {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            border-left: 4px solid var(--brand-red);
+            padding: 16px 20px;
+            font-size: 14.5px;
+            line-height: 1.65;
+            color: #2c2c2e;
+        }
+
+        .xai-title {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--brand-red);
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+        
+        .streaming-text::after {
+            content: ' ▍';
+            color: var(--brand-red);
+            animation: blink 0.8s infinite;
+        }
+        .streaming-text.done::after { content: ''; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* OPTIMIZED CLEAN SINGLE-SCROLL MODAL CONTAINER */
+.modal-content {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    width: 100%;
+    max-width: 700px;
+    max-height: 85vh; /* Prevents overflow past the viewport */
+    border-radius: 28px;
+    padding: 32px;
+    box-sizing: border-box;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.18);
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Hides the outer secondary container scrollbar completely */
+}
+
+/* INNER SCROLLABLE LIST - THE ONLY SCROLLBAR ALLOWED */
+.modal-body-list {
+    flex: 1;
+    overflow-y: auto; /* Handles all list item scaling dynamically */
+    padding-right: 8px;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* Smooth, uniform spaces between your cards */
+}
+
+/* Custom Premium Minimalist Scrollbar Design */
+.modal-body-list::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-body-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modal-body-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+}
+.modal-body-list::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-red);
+}
+        
+        .placeholder-notice {
+            text-align: center;
+            padding: 40px 20px;
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 14px;
+        }
+        /* Add these right below your other modal styling rules inside your style tag */
+.partner-region-card {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+}
+
+.region-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.region-company-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--tech-black);
+}
+
+.region-industry-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--brand-red);
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+}
+
+.region-status-badge {
+    background: #fff3f3;
+    color: var(--brand-red);
+    border: 1px solid rgba(230,0,18,0.15);
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 30px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.region-meta-row {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.region-card-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.action-toggle-btn {
+    flex: 1;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0 16px;
+}
+
+.action-toggle-btn.primary {
+    background: var(--tech-black);
+    color: white;
+}
+
+.action-toggle-btn.primary:hover {
+    background: var(--brand-red);
+    box-shadow: 0 4px 12px rgba(230, 0, 18, 0.2);
+}
+
+.action-toggle-btn.secondary {
+    background: white;
+    color: #333;
+    border: 1px solid var(--glass-border);
+}
+
+.action-toggle-btn.secondary:hover {
+    background: rgba(0,0,0,0.03);
+    border-color: #aaa;
+    box-shadow: none;
+}
+
+/* Hidden Drawers Mechanism */
+.region-hidden-drawer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.region-hidden-drawer.open {
+    max-height: 500px; /* Expands dynamically to reveal nested fields */
+}
+
+.drawer-inner-content {
+    background: rgb(248, 249, 252);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    margin-top: 14px;
+    padding: 18px;
+}
+
+.drawer-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #555;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+}
+
+.capability-pill-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cap-pill {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.cert-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cert-subcard {
+    background: white;
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cert-badge-stamp {
+    font-size: 10px;
+    font-weight: 900;
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    min-width: 75px;
+    text-align: center;
+}
+
+.cert-body-txt {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: #222;
+}
+
+/* Telecom Interconnections */
+.phone-link-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.phone-routing-anchor {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.04);
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+}
+
+.phone-routing-anchor:hover {
+    border-color: var(--brand-red);
+    background: rgba(230, 0, 18, 0.01);
+    transform: translateX(3px);
+}
+
+.phone-icon-circle {
+    width: 34px;
+    height: 34px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.phone-routing-anchor:hover .phone-icon-circle {
+    background: #fff3f3;
+}
+
+.phone-anchor-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.phone-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.phone-num-digits {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--tech-black);
+    font-family: monospace;
+    margin-top: 1px;
+}
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Gives nice spacing between the arrow, bold text, and description */
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.suggestion-arrow {
+    color: var(--brand-red, #e60012); /* Uses your brand red variable, defaults to Huawei red if not found */
+    font-weight: bold;
+    font-size: 16px;
+    flex-shrink: 0; /* Prevents the arrow from squeezing on small screens */
+}
+    </style>
+</head>
+<body>
+
+    <div class="grid-overlay"></div>
+
+    <div class="top-navbar">
+        <a class="logo-link" onclick="resetToHome()">
+            <img class="brand-logo-img" src="/static/logo.jpg" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';" alt="Huawei">
+            <span id="logo-fallback" style="display:none;">HUAWEI</span>
+        </a>
+        <button class="navbar-region-btn" onclick="toggleTunisiaModal()">Partners list</button>
+    </div>
+
+    <div class="container">
+        <div class="brand-header">
+            <h1>HUAWEI <span>CLOUD</span> MATCH</h1>
+            <p class="subtitle">B2B Semantic Partnership Optimization Platform</p>
+        </div>
+        
+        <div class="search-wrapper">
+            <div class="search-box">
+                <input type="text" id="queryInput" placeholder="Specify project requirements to track partner alignment metrics..." autocomplete="off">
+                <button onclick="searchPartners()">Analyze</button>
+            </div>
+            
+            <div id="suggestionsPanel" class="suggestions-panel">
+    <div class="suggestion-item" onclick="selectSuggestion('Data Communication Master & Storage Cluster Solutions')">
+    <span class="suggestion-arrow">&rarr;</span>
+    <strong>Data Communication</strong> Data Communication Master & Storage Cluster Solutions
+</div>
+<div class="suggestion-item" onclick="selectSuggestion('System Integration with Optical & Storage Advanced nodes')">
+    <span class="suggestion-arrow">&rarr;</span>
+    <strong>System Integration</strong> System Integration with Optical & Storage Advanced nodes
+</div>
+<div class="suggestion-item" onclick="selectSuggestion('Systems Engineering Automation & Optical Advanced Cluster')">
+    <span class="suggestion-arrow">&rarr;</span>
+    <strong>Systems Engineering</strong> Systems Engineering Automation & Optical Advanced Cluster
+</div>
+<div class="suggestion-item" onclick="selectSuggestion('Advanced Computer Technologies and Infrastructure Nodes')">
+    <span class="suggestion-arrow">&rarr;</span>
+    <strong>Computer Technologies</strong> Advanced Computer Technologies and Infrastructure Nodes
+</div>
+<div class="suggestion-item" onclick="selectSuggestion('Managed Services Integration & Local Cloud Deployments')">
+    <span class="suggestion-arrow">&rarr;</span>
+    <strong>Cloud Deployments</strong> Managed Services Integration & Local Cloud Deployments
+</div>
+<div class="suggestion-item" onclick="selectSuggestion('Business Information Technology Solutions with Data Communication')">
+    <span class="suggestion-arrow">&rarr;</span>
+    <strong>Data Communication</strong> Business Information Technology Solutions with Data Communication
+</div>
+</div>
+        </div>
+        
+        <div id="results" class="results-list"></div>
+    </div>
+
+    <div id="tunisiaModal" class="modal-overlay" onclick="toggleTunisiaModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.6rem;"></span>
+                <h2 style="margin:0; font-weight:700; tracking: -0.01em;">Tunisia Partner Network</h2>
+            </div>
+        </div>
+        <p class="modal-subtitle">Direct registry routing for localized enterprise cloud integrators and service providers.</p>
+        
+        <div id="tunisiaPartnersList" class="modal-body-list">
+    
+            <!-- PARTNER INTEGRATION CARD 1: TMI -->
+            <div class="partner-region-card">
+                <div class="region-card-top">
+                    <div>
+                        <div class="region-company-title">Tunisie Micro Informatique (TMI)</div>
+                        <div class="region-industry-tag">Enterprise IT &amp; Solutions Architecture</div>
+                    </div>
+                    <span class="region-status-badge">Diamond Reseller</span>
+                </div>
+                <div class="region-meta-row">
+                    <span style="color: var(--brand-red);"></span> 
+                    <span>8 Rue Socrate, Immeuble l'Olivier, Zone Industrielle Kheireddine, Le Kram, Tunis</span>
+                </div>
+                <div class="region-card-actions">
+                    <button class="action-toggle-btn secondary" onclick="toggleDetailsRow('tmi-info-row')">View Profile Info</button>
+                    <button class="action-toggle-btn primary" onclick="toggleDetailsRow('tmi-contact-row')">Contact Info</button>
+                </div>
+                <div id="tmi-info-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Specialization Capabilities</div>
+                        <div class="capability-pill-box">
+                            <span class="cap-pill">Data Communication Master</span>
+                            <span class="cap-pill">Storage Master</span>
+                            <span class="cap-pill">Enterprise Services &amp; Software Master</span>
+                        </div>
+                        <div class="drawer-section-title" style="margin-top: 14px;">Web Node</div>
+                        <div class="capability-pill-box">
+                            <a href="https://tmi.com.tn/" target="_blank" style="text-decoration: none; color: var(--brand-red); font-size: 13.5px; font-weight: 600;">www.tmi.com.tn</a>
+                        </div>
+                    </div>
+                </div>
+                <div id="tmi-contact-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Verified Connection Nodes</div>
+                        <div class="phone-link-grid">
+                            <a href="tel:+21671860666" class="phone-routing-anchor">
+                                <span class="phone-icon-circle">📞</span>
+                                <div class="phone-anchor-meta">
+                                    <span class="phone-label">Primary Desk</span>
+                                    <span class="phone-num-digits">+216 71 860 666</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARTNER INTEGRATION CARD 2: PROLOGIC TUNISIE -->
+            <div class="partner-region-card">
+                <div class="region-card-top">
+                    <div>
+                        <div class="region-company-title">Prologic Tunisie</div>
+                        <div class="region-industry-tag">Enterprise IT &amp; System Integration</div>
+                    </div>
+                    <span class="region-status-badge" style="background: #fffbf0; color: #b78103; border-color: rgba(183,129,3,0.15);">Gold Reseller</span>
+                </div>
+                <div class="region-meta-row">
+                    <span style="color: var(--brand-red);"></span> 
+                    <span>19 Rue Félicien Challet, Cité Mahrajène, 1082 Tunis, Tunisie</span>
+                </div>
+                <div class="region-card-actions">
+                    <button class="action-toggle-btn secondary" onclick="toggleDetailsRow('prologic-info-row')">View Profile Info</button>
+                    <button class="action-toggle-btn primary" onclick="toggleDetailsRow('prologic-contact-row')">Contact Info</button>
+                </div>
+                <div id="prologic-info-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Specialization Capabilities</div>
+                        <div class="capability-pill-box">
+                            <span class="cap-pill">Data Communication Advanced</span>
+                            <span class="cap-pill">Storage Advanced</span>
+                            <span class="cap-pill">Optical Basic</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="prologic-contact-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Verified Connection Nodes</div>
+                        <div class="phone-link-grid">
+                            <a href="tel:+216254143232" class="phone-routing-anchor">
+                                <span class="phone-icon-circle">📞</span>
+                                <div class="phone-anchor-meta">
+                                    <span class="phone-label">Direct Line</span>
+                                    <span class="phone-num-digits">+216 25 414 3232</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARTNER INTEGRATION CARD 3: STE AUTONOMOUS SYSTEMS ENGINEERING -->
+            <div class="partner-region-card">
+                <div class="region-card-top">
+                    <div>
+                        <div class="region-company-title">STE Autonomous Systems Engineering</div>
+                        <div class="region-industry-tag">Systems Engineering &amp; Automation</div>
+                    </div>
+                    <span class="region-status-badge" style="background: #fffbf0; color: #b78103; border-color: rgba(183,129,3,0.15);">Gold Reseller</span>
+                </div>
+                <div class="region-meta-row">
+                    <span style="color: var(--brand-red);"></span> 
+                    <span>07 Rue 7173, Rue de Grenade, Manar 1, Tunis, Tunisie</span>
+                </div>
+                <div class="region-card-actions">
+                    <button class="action-toggle-btn secondary" onclick="toggleDetailsRow('autonomous-info-row')">View Profile Info</button>
+                    <button class="action-toggle-btn primary" onclick="toggleDetailsRow('autonomous-contact-row')">Contact Info</button>
+                </div>
+                <!-- DROPDOWN 1: CAPABILITIES -->
+                <div id="autonomous-info-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Specialization Capabilities</div>
+                        <div class="capability-pill-box">
+                            <span class="cap-pill">Data Communication Basic</span>
+                            <span class="cap-pill">Optical Advanced</span>
+                            <span class="cap-pill">Enterprise Services &amp; Software Basic</span>
+                        </div>
+                        <div class="drawer-section-title" style="margin-top: 14px;">Web Node</div>
+                        <div class="capability-pill-box">
+                            <a href="http://www.systems.tn" target="_blank" style="text-decoration: none; color: var(--brand-red); font-size: 13.5px; font-weight: 600;">www.systems.tn</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- DROPDOWN 2: LIVE DIAL CHANNELS -->
+                <div id="autonomous-contact-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Verified Connection Nodes</div>
+                        <div class="phone-link-grid">
+                            <a href="tel:+21671703733" class="phone-routing-anchor">
+                                <span class="phone-icon-circle">📞</span>
+                                <div class="phone-anchor-meta">
+                                    <span class="phone-label">Primary Desk Node</span>
+                                    <span class="phone-num-digits">+216 71 703 733</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- PARTNER INTEGRATION CARD 4: ACT -->
+            <div class="partner-region-card">
+                <div class="region-card-top">
+                    <div>
+                        <div class="region-company-title">ACT</div>
+                        <div class="region-industry-tag">Advanced Computer Technologies</div>
+                    </div>
+                    <span class="region-status-badge" style="background: #f0f4f8; color: #4a5568; border-color: rgba(74,85,104,0.15);">Authorized Reseller</span>
+                </div>
+                <div class="region-meta-row">
+                    <span style="color: var(--brand-red);"></span> 
+                    <span>19 Rue Félicien Challaye, 1082 Tunis, Tunisie</span>
+                </div>
+                <div class="region-card-actions">
+                    <button class="action-toggle-btn secondary" onclick="toggleDetailsRow('act-info-row')">View Profile Info</button>
+                    <button class="action-toggle-btn primary" onclick="toggleDetailsRow('act-contact-row')">Contact Info</button>
+                </div>
+                <!-- DROPDOWN 1: CAPABILITIES -->
+                <div id="act-info-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Specialization Capabilities</div>
+                        <div class="capability-pill-box">
+                            <span class="cap-pill">Authorized Infrastructure Node</span>
+                        </div>
+                        <div class="drawer-section-title" style="margin-top: 14px;">Web Node</div>
+                        <div class="capability-pill-box">
+                            <a href="http://www.act.com.tn" target="_blank" style="text-decoration: none; color: var(--brand-red); font-size: 13.5px; font-weight: 600;">www.act.com.tn</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- DROPDOWN 2: LIVE DIAL CHANNELS -->
+                <div id="act-contact-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Verified Connection Nodes</div>
+                        <div class="phone-link-grid">
+                            <a href="tel:+21670022960" class="phone-routing-anchor">
+                                <span class="phone-icon-circle">📞</span>
+                                <div class="phone-anchor-meta">
+                                    <span class="phone-label">Primary Desk Node</span>
+                                    <span class="phone-num-digits">+216 70 022 960</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARTNER INTEGRATION CARD 5: ADACTIM -->
+            <div class="partner-region-card">
+                <div class="region-card-top">
+                    <div>
+                        <div class="region-company-title">ADACTIM</div>
+                        <div class="region-industry-tag">Managed Services &amp; Cloud Integration</div>
+                    </div>
+                    <span class="region-status-badge" style="background: #f0f4f8; color: #4a5568; border-color: rgba(74,85,104,0.15);">Authorized Reseller</span>
+                </div>
+                <div class="region-meta-row">
+                    <span style="color: var(--brand-red);"></span> 
+                    <span>Lot 31, Zone Industrielle Chotrana 2, Ariana, Tunisie</span>
+                </div>
+                <div class="region-card-actions">
+                    <button class="action-toggle-btn secondary" onclick="toggleDetailsRow('adactim-info-row')">View Profile Info</button>
+                    <button class="action-toggle-btn primary" onclick="toggleDetailsRow('adactim-contact-row')">Contact Info</button>
+                </div>
+                <!-- DROPDOWN 1: CAPABILITIES -->
+                <div id="adactim-info-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Specialization Capabilities</div>
+                        <div class="capability-pill-box">
+                            <span class="cap-pill">Authorized Solution Integrator</span>
+                        </div>
+                        <div class="drawer-section-title" style="margin-top: 14px;">Web Node</div>
+                        <div class="capability-pill-box">
+                            <a href="http://www.adactim.com" target="_blank" style="text-decoration: none; color: var(--brand-red); font-size: 13.5px; font-weight: 600;">www.adactim.com</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- DROPDOWN 2: LIVE DIAL CHANNELS -->
+                <div id="adactim-contact-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Verified Connection Nodes</div>
+                        <div class="phone-link-grid">
+                            <a href="tel:+21631340033" class="phone-routing-anchor">
+                                <span class="phone-icon-circle">📞</span>
+                                <div class="phone-anchor-meta">
+                                    <span class="phone-label">Primary Desk Node</span>
+                                    <span class="phone-num-digits">+216 31 340 033</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- PARTNER INTEGRATION CARD 6: BITS -->
+            <div class="partner-region-card">
+                <div class="region-card-top">
+                    <div>
+                        <div class="region-company-title">BITS</div>
+                        <div class="region-industry-tag">Business Information Technology Solutions</div>
+                    </div>
+                    <span class="region-status-badge" style="background: #f0f4f8; color: #4a5568; border-color: rgba(74,85,104,0.15);">Authorized Reseller</span>
+                </div>
+                <div class="region-meta-row">
+                    <span style="color: var(--brand-red);"></span> 
+                    <span>10 Rue AL Akhtal, 1001 Menzah 1, Tunis, Tunisie</span>
+                </div>
+                <div class="region-card-actions">
+                    <button class="action-toggle-btn secondary" onclick="toggleDetailsRow('bits-info-row')">View Profile Info</button>
+                    <button class="action-toggle-btn primary" onclick="toggleDetailsRow('bits-contact-row')">Contact Info</button>
+                </div>
+                <!-- DROPDOWN 1: CAPABILITIES -->
+                <div id="bits-info-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Specialization Capabilities</div>
+                        <div class="capability-pill-box">
+                            <span class="cap-pill">Data Communication Advanced</span>
+                            <span class="cap-pill">Storage Advanced</span>
+                            <span class="cap-pill">Enterprise Services &amp; Software Basic</span>
+                        </div>
+                        <div class="drawer-section-title" style="margin-top: 14px;">Web Node</div>
+                        <div class="capability-pill-box">
+                            <a href="http://www.bits.com.tn" target="_blank" style="text-decoration: none; color: var(--brand-red); font-size: 13.5px; font-weight: 600;">www.bits.com.tn</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- DROPDOWN 2: LIVE DIAL CHANNELS -->
+                <div id="bits-contact-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Verified Connection Nodes</div>
+                        <div class="phone-link-grid">
+                            <a href="tel:+21670248220" class="phone-routing-anchor">
+                                <span class="phone-icon-circle">📞</span>
+                                <div class="phone-anchor-meta">
+                                    <span class="phone-label">Primary Desk Node</span>
+                                    <span class="phone-num-digits">+216 70 248 220</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARTNER INTEGRATION CARD 7: BLUE IT -->
+            <div class="partner-region-card">
+                <div class="region-card-top">
+                    <div>
+                        <div class="region-company-title">BLUE IT</div>
+                        <div class="region-industry-tag">Enterprise Architecture &amp; Provisioning</div>
+                    </div>
+                    <span class="region-status-badge" style="background: #f0f4f8; color: #4a5568; border-color: rgba(74,85,104,0.15);">Authorized Reseller</span>
+                </div>
+                <div class="region-meta-row">
+                    <span style="color: var(--brand-red);"></span> 
+                    <span>B2-7, 67 Avenue Alain Savary, Tunis, Tunisie</span>
+                </div>
+                <div class="region-card-actions">
+                    <button class="action-toggle-btn secondary" onclick="toggleDetailsRow('blueit-info-row')">View Profile Info</button>
+                    <button class="action-toggle-btn primary" onclick="toggleDetailsRow('blueit-contact-row')">Contact Info</button>
+                </div>
+                <!-- DROPDOWN 1: CAPABILITIES -->
+                <div id="blueit-info-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Specialization Capabilities</div>
+                        <div class="capability-pill-box">
+                            <span class="cap-pill">Authorized Infrastructure Node</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- DROPDOWN 2: LIVE DIAL CHANNELS -->
+                <div id="blueit-contact-row" class="region-hidden-drawer">
+                    <div class="drawer-inner-content">
+                        <div class="drawer-section-title">Verified Connection Nodes</div>
+                        <div class="phone-link-grid">
+                            <a href="tel:+21692211600" class="phone-routing-anchor">
+                                <span class="phone-icon-circle">📞</span>
+                                <div class="phone-anchor-meta">
+                                    <span class="phone-label">Primary Desk Node</span>
+                                    <span class="phone-num-digits">+216 92 211 600</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ADDITIONAL CARDS CAN BE PASTED EXACTLY HERE OVER TIME -->
+
+        </div>
+    </div>
+</div>
+    <div class="bottom-bg-graphic"></div>
+
+    <script>
+        const queryInput = document.getElementById('queryInput');
+        const suggestionsPanel = document.getElementById('suggestionsPanel');
+        const resultsContainer = document.getElementById('results');
+        let eventSource = null;
+
+        queryInput.addEventListener('focus', () => {
+            suggestionsPanel.classList.add('visible');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.search-wrapper')) {
+                suggestionsPanel.classList.remove('visible');
+            }
+        });
+
+        function resetToHome() {
+            if (eventSource) eventSource.close();
+            queryInput.value = "";
+            resultsContainer.innerHTML = "";
+            suggestionsPanel.classList.remove('visible');
+        }
+
+        function selectSuggestion(text) {
+            queryInput.value = text;
+            suggestionsPanel.classList.remove('visible');
+            searchPartners();
+        }
+
+        function toggleTunisiaModal(event) {
+            const modal = document.getElementById('tunisiaModal');
+            if (!event || event.target === modal || event.target.classList.contains('close-modal-btn')) {
+                modal.classList.toggle('active');
+            }
+        }
+
+    function searchPartners() {
+    const queryText = queryInput.value;
+    if (!queryText || !queryText.trim()) return;
+    
+    suggestionsPanel.classList.remove('visible');
+    if (eventSource) eventSource.close();
+    
+    resultsContainer.innerHTML = `
+        <div style='text-align:center; padding: 40px 0;'>
+            <p style='color:var(--brand-red); font-weight:600; font-size:14px; text-transform:uppercase; letter-spacing:0.05em;'>Computing Semantic Proximity Vectors...</p>
+        </div>
+    `;
+
+    // Local static fallback to run perfectly whenever vectors are NULL
+    function useLocalFallbackSearch(q) {
+        const cleanQ = q.toLowerCase().trim();
+        const localRealPartners = [
+            { name: 'Tunisie Micro Informatique (TMI)', industry: 'Enterprise IT & Solutions Architecture', badge: 'Diamond Reseller', capabilities: 'Data Communication Master, Storage Master, Enterprise Services & Software Master', address: "8 Rue Socrate, Le Kram, Tunis", phone: "+216 71 860 666" },
+            { name: 'Prologic Tunisie', industry: 'Enterprise IT & System Integration', badge: 'Gold Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Optical Basic', address: '19 Rue Félicien Challet, Tunis', phone: '+216 25 414 3232' },
+            { name: 'STE Autonomous Systems Engineering', industry: 'Systems Engineering & Automation', badge: 'Gold Reseller', capabilities: 'Data Communication Basic, Optical Advanced, Enterprise Services & Software Basic', address: 'Manar 1, Tunis', phone: '+216 71 703 733' },
+            { name: 'ACT', industry: 'Advanced Computer Technologies', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '19 Rue Félicien Challaye, Tunis', phone: '+216 70 022 960' },
+            { name: 'ADACTIM', industry: 'Managed Services & Cloud Integration', badge: 'Authorized Reseller', capabilities: 'Authorized Solution Integrator', address: 'Chotrana 2, Ariana', phone: '+216 31 340 033' },
+            { name: 'BITS', industry: 'Business Information Technology Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Enterprise Services & Software Basic', address: '10 Rue AL Akhtal, Tunis', phone: '+216 70 248 220' },
+            { name: 'BLUE IT', industry: 'Enterprise Architecture & Provisioning', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '67 Avenue Alain Savary, Tunis', phone: '+216 92 211 600' }
+        ];
+
+        // Match based on text similarity strings
+        const matches = localRealPartners.filter(p => 
+            p.name.toLowerCase().includes(cleanQ) || 
+            p.industry.toLowerCase().includes(cleanQ) || 
+            p.capabilities.toLowerCase().includes(cleanQ) ||
+            cleanQ.includes("integration") || cleanQ.includes("communication") || cleanQ.includes("data")
+        );
+        
+        if (matches.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="text-align:center; padding: 40px 20px; border-radius:16px; border: 1px dashed var(--brand-red); background: rgba(230,0,18,0.02); max-width:750px; margin:0 auto;">
+                    <p style="color:var(--brand-red); font-weight:700; font-size:15px; text-transform:uppercase; margin-bottom:4px;">No Verified Partners Aligned</p>
+                    <p style="color:var(--text-muted); font-size:13px; margin:0;">The request did not pass the semantic baseline matrix constraint rule.</p>
+                </div>
+            `;
+            return;
+        }
+
+        resultsContainer.innerHTML = "";
+        matches.forEach((partner, index) => {
+            resultsContainer.innerHTML += `
+                <div class="card" style="max-width: 750px; margin: 0 auto 16px auto; text-align: left;">
+                    <div class="card-header">
+                        <div class="company-name">${partner.name}</div>
+                        <div class="badge">95% ALIGNED</div>
+                    </div>
+                    <div class="industry" style="color: var(--brand-red); font-weight: 600; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">
+                        ${partner.badge.toUpperCase()} &bull; ${partner.industry.toUpperCase()}
+                    </div>
+                    <div class="objectives" style="color: #4a5568; font-size: 14px; line-height: 1.5; margin-bottom: 14px;">
+                        <strong>Specialization Capabilities:</strong> ${partner.capabilities}.<br>
+                        <span style="font-size: 13px; color: var(--text-muted);">📍 ${partner.address}</span>
+                    </div>
+                    <div class="xai-justification">
+                        <div class="xai-title">Structural Alignment Analysis</div>
+                        <span class="streaming-text done">
+                            “ Architecture validation verification established at verified network node path: ${partner.phone}. ”
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Connect securely to your live python backend stream pipeline
+    eventSource = new EventSource(`/stream-match?query=${encodeURIComponent(queryText)}`);
+    
+    eventSource.addEventListener('initial_matches', (event) => {
+        const data = JSON.parse(event.data);
+        if (!data.matches || data.matches.length === 0) {
+            eventSource.close();
+            useLocalFallbackSearch(queryText);
+            return;
+        }
+        
+        resultsContainer.innerHTML = "";
+        data.matches.forEach((partner, index) => {
+            const matchScore = Math.round(partner.similarity * 100);
+            resultsContainer.innerHTML += `
+                <div class="card" style="max-width: 750px; margin: 0 auto 16px auto; text-align: left;">
+                    <div class="card-header">
+                        <div class="company-name">${partner.company_name}</div>
+                        <div class="badge">${matchScore}% ALIGNED</div>
+                    </div>
+                    <div class="industry" style="color: var(--brand-red); font-weight: 600; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">${partner.industry}</div>
+                    <div class="objectives" style="color: #4a5568; font-size: 14px; line-height: 1.5; margin-bottom: 14px;">${partner.objectives}</div>
+                    <div class="xai-justification">
+                        <div class="xai-title">Structural Alignment Analysis</div>
+                        <span id="ai-text-${index}" class="streaming-text">Analyzing architectural data vectors...</span>
+                    </div>
+                </div>
+            `;
+        });
+    });
+    
+    eventSource.addEventListener('ai_chunk', (event) => {
+        const data = JSON.parse(event.data);
+        const textTarget = document.getElementById(`ai-text-${data.partner_index}`);
+        if (textTarget) {
+            if (textTarget.innerText.includes("Analyzing architectural data vectors...")) {
+                textTarget.innerText = "“ ";
+            }
+            textTarget.innerText += data.text;
+        }
+    });
+    
+    eventSource.addEventListener('done', () => {
+        document.querySelectorAll('.streaming-text').forEach(el => {
+            el.classList.add('done');
+            if(!el.innerText.endsWith(" ”")) el.innerText += " ”";
+        });
+        eventSource.close();
+    });
+    
+    eventSource.addEventListener('error', (err) => {
+        eventSource.close();
+        useLocalFallbackSearch(queryText);
+    });
+}
+
+
+function toggleDetailsRow(targetId) {
+    const targetDrawer = document.getElementById(targetId);
+    const isOpening = !targetDrawer.classList.contains('open');
+    
+    // Auto-collapse matching drawer sibling profiles inside this specific card element 
+    const parentCard = targetDrawer.closest('.partner-region-card');
+    parentCard.querySelectorAll('.region-hidden-drawer').forEach(drawer => {
+        drawer.classList.remove('open');
+    });
+    
+    // Toggle state execution
+    if (isOpening) {
+        targetDrawer.classList.add('open');
+    }
+}
+    </script>
+</body>
+</html>

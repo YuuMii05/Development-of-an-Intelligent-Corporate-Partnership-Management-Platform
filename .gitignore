@@ -1,0 +1,15 @@
+# Environnement virtuel
+venv/
+.venv/
+env/
+
+# Variables d'environnement secrètes
+.env
+
+# Fichiers de cache Python
+__pycache__/
+*.pyc
+
+# Fichiers système ou éditeur
+.vscode/
+.DS_Store
