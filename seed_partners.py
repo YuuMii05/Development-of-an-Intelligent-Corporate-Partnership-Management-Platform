@@ -20,37 +20,65 @@ partners_data = [
     {
         "company_name": "Tunisie Micro Informatique (TMI)",
         "industry": "Enterprise IT & Solutions Architecture",
-        "objectives": "Certified Huawei Authorized Learning Partner. Diamond Reseller specializing in Data Communication Master setups, Storage Master cluster file structures, and Enterprise Services and Software-Master architectures."
+        "objectives": "Certified Huawei Authorized Learning Partner. Diamond Reseller specializing in Data Communication Master setups, Storage Master cluster file structures, and Enterprise Services and Software-Master architectures.",
+        "health_score": 94,
+        "risk_level": "Low",
+        "engagement_trend": "En Hausse 📈",
+        "future_value_estimate": "€500K+ (Excellent)"
     },
     {
         "company_name": "Prologic Tunisie",
         "industry": "Enterprise IT & System Integration",
-        "objectives": "Gold Reseller tier provider specializing in System Integration, Data Communication-Advanced routing infrastructure, Storage-Advanced high availability pools, Optical-Basic pathways, and Enterprise Services and Software-Basic."
+        "objectives": "Gold Reseller tier provider specializing in System Integration, Data Communication-Advanced routing infrastructure, Storage-Advanced high availability pools, Optical-Basic pathways, and Enterprise Services and Software-Basic.",
+        "health_score": 78,
+        "risk_level": "Medium",
+        "engagement_trend": "Stable ➡️",
+        "future_value_estimate": "€250K (Modéré)"
     },
     {
         "company_name": "STE Autonomous Systems Engineering",
         "industry": "Systems Engineering & Automation",
-        "objectives": "Gold Reseller ecosystem partner specializing in advanced Automation systems, Systems Engineering frameworks, Data Communication-Basic setups, Optical-Advanced transport channels, and Enterprise Services and Software-Basic clusters."
+        "objectives": "Gold Reseller ecosystem partner specializing in advanced Automation systems, Systems Engineering frameworks, Data Communication-Basic setups, Optical-Advanced transport channels, and Enterprise Services and Software-Basic clusters.",
+        "health_score": 42,
+        "risk_level": "High",
+        "engagement_trend": "En Baisse 📉",
+        "future_value_estimate": "€50K (Critique)"
     },
     {
         "company_name": "ACT",
         "industry": "Advanced Computer Technologies",
-        "objectives": "Authorized Reseller network node specializing in Advanced Computer Technologies and verified local Infrastructure node resource deployments."
+        "objectives": "Authorized Reseller network node specializing in Advanced Computer Technologies and verified local Infrastructure node resource deployments.",
+        "health_score": 88,
+        "risk_level": "Low",
+        "engagement_trend": "Stable ➡️",
+        "future_value_estimate": "€120K (Régulier)"
     },
     {
         "company_name": "ADACTIM",
         "industry": "Managed Services & Cloud Integration",
-        "objectives": "Authorized Reseller agency focused on Managed Services delivery, Cloud Integration architecture, and localized structural Solution Integrator services."
+        "objectives": "Authorized Reseller agency focused on Managed Services delivery, Cloud Integration architecture, and localized structural Solution Integrator services.",
+        "health_score": 61,
+        "risk_level": "Medium",
+        "engagement_trend": "En Baisse 📉",
+        "future_value_estimate": "€180K (À surveiller)"
     },
     {
         "company_name": "BITS",
         "industry": "Business Information Technology Solutions",
-        "objectives": "Authorized Reseller center maximizing Business Information Technology Solutions, Data Communication-Advanced configurations, Storage-Advanced environments, and Enterprise Services and Software-Basic engines."
+        "objectives": "Authorized Reseller center maximizing Business Information Technology Solutions, Data Communication-Advanced configurations, Storage-Advanced environments, and Enterprise Services and Software-Basic engines.",
+        "health_score": 91,
+        "risk_level": "Low",
+        "engagement_trend": "En Hausse 📈",
+        "future_value_estimate": "€300K (Fort)"
     },
     {
         "company_name": "BLUE IT",
         "industry": "Enterprise Architecture & Provisioning",
-        "objectives": "Authorized Reseller specialist optimizing localized Enterprise Architecture systems, platform Provisioning paths, and core infrastructure node deployments."
+        "objectives": "Authorized Reseller specialist optimizing localized Enterprise Architecture systems, platform Provisioning paths, and core infrastructure node deployments.",
+        "health_score": 83,
+        "risk_level": "Low",
+        "engagement_trend": "Stable ➡️",
+        "future_value_estimate": "€95K (Stable)"
     }
 ]
 
@@ -77,13 +105,16 @@ async def seed_database():
             )
             real_vector = response_embed["embedding"]
             
-            # Insert the complete row with real text and real mathematical vectors into Supabase
             response = supabase.table("partner_profiles").insert({
-                "company_name": partner["company_name"],
-                "industry": partner["industry"],
-                "objectives": partner["objectives"],
-                "embedding": real_vector
-            }).execute()
+    "company_name": partner["company_name"],
+    "industry": partner["industry"],
+    "objectives": partner["objectives"],
+    "embedding": real_vector,
+    "health_score": partner["health_score"],
+    "risk_level": partner["risk_level"],
+    "engagement_trend": partner["engagement_trend"],
+    "future_value_estimate": partner["future_value_estimate"]
+    }).execute()
             
             print(f"    Successfully seeded: {partner['company_name']}")
 

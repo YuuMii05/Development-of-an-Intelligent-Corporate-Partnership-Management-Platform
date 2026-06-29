@@ -673,7 +673,7 @@
 .suggestion-item {
     display: flex;
     align-items: center;
-    gap: 10px; /* Gives nice spacing between the arrow, bold text, and description */
+    gap: 10px; 
     padding: 12px 16px;
     cursor: pointer;
     transition: background 0.2s ease;
@@ -1084,183 +1084,319 @@
     <div class="bottom-bg-graphic"></div>
 
     <script>
-        const queryInput = document.getElementById('queryInput');
-        const suggestionsPanel = document.getElementById('suggestionsPanel');
-        const resultsContainer = document.getElementById('results');
-        let eventSource = null;
+    const queryInput = document.getElementById('queryInput');
+    const suggestionsPanel = document.getElementById('suggestionsPanel');
+    const resultsContainer = document.getElementById('results'); // Votre conteneur principal
+    let eventSource = null;
 
-        queryInput.addEventListener('focus', () => {
-            suggestionsPanel.classList.add('visible');
-        });
+    queryInput.addEventListener('focus', () => {
+        suggestionsPanel.classList.add('visible');
+    });
 
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('.search-wrapper')) {
-                suggestionsPanel.classList.remove('visible');
-            }
-        });
-
-        function resetToHome() {
-            if (eventSource) eventSource.close();
-            queryInput.value = "";
-            resultsContainer.innerHTML = "";
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.search-wrapper')) {
             suggestionsPanel.classList.remove('visible');
         }
+    });
 
-        function selectSuggestion(text) {
-            queryInput.value = text;
-            suggestionsPanel.classList.remove('visible');
-            searchPartners();
-        }
+    function resetToHome() {
+        if (eventSource) eventSource.close();
+        queryInput.value = "";
+        resultsContainer.innerHTML = "";
+        suggestionsPanel.classList.remove('visible');
+    }
 
-        function toggleTunisiaModal(event) {
-            const modal = document.getElementById('tunisiaModal');
-            if (!event || event.target === modal || event.target.classList.contains('close-modal-btn')) {
-                modal.classList.toggle('active');
-            }
+    function selectSuggestion(text) {
+        queryInput.value = text;
+        suggestionsPanel.classList.remove('visible');
+        searchPartners();
+    }
+
+    function toggleTunisiaModal(event) {
+        const modal = document.getElementById('tunisiaModal');
+        if (!event || event.target === modal || event.target.classList.contains('close-modal-btn')) {
+            modal.classList.toggle('active');
         }
+    }
+
+    function toggleDetailsRow(rowId) {
+        const row = document.getElementById(rowId);
+        if (!row) return;
+        // Accordion: if this row has a sibling drawer (info/contact) open, close it first
+        const prefix = rowId.replace(/-(info|contact)-row$/, '');
+        const counterpart = rowId.endsWith('-info-row')
+            ? document.getElementById(prefix + '-contact-row')
+            : document.getElementById(prefix + '-info-row');
+        if (counterpart && counterpart !== row) counterpart.classList.remove('open');
+        row.classList.toggle('open');
+    }
 
     function searchPartners() {
-    const queryText = queryInput.value;
-    if (!queryText || !queryText.trim()) return;
-    
-    suggestionsPanel.classList.remove('visible');
-    if (eventSource) eventSource.close();
-    
-    resultsContainer.innerHTML = `
-        <div style='text-align:center; padding: 40px 0;'>
-            <p style='color:var(--brand-red); font-weight:600; font-size:14px; text-transform:uppercase; letter-spacing:0.05em;'>Computing Semantic Proximity Vectors...</p>
-        </div>
-    `;
-
-    // Local static fallback to run perfectly whenever vectors are NULL
-    function useLocalFallbackSearch(q) {
-        const cleanQ = q.toLowerCase().trim();
-        const localRealPartners = [
-            { name: 'Tunisie Micro Informatique (TMI)', industry: 'Enterprise IT & Solutions Architecture', badge: 'Diamond Reseller', capabilities: 'Data Communication Master, Storage Master, Enterprise Services & Software Master', address: "8 Rue Socrate, Le Kram, Tunis", phone: "+216 71 860 666" },
-            { name: 'Prologic Tunisie', industry: 'Enterprise IT & System Integration', badge: 'Gold Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Optical Basic', address: '19 Rue Félicien Challet, Tunis', phone: '+216 25 414 3232' },
-            { name: 'STE Autonomous Systems Engineering', industry: 'Systems Engineering & Automation', badge: 'Gold Reseller', capabilities: 'Data Communication Basic, Optical Advanced, Enterprise Services & Software Basic', address: 'Manar 1, Tunis', phone: '+216 71 703 733' },
-            { name: 'ACT', industry: 'Advanced Computer Technologies', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '19 Rue Félicien Challaye, Tunis', phone: '+216 70 022 960' },
-            { name: 'ADACTIM', industry: 'Managed Services & Cloud Integration', badge: 'Authorized Reseller', capabilities: 'Authorized Solution Integrator', address: 'Chotrana 2, Ariana', phone: '+216 31 340 033' },
-            { name: 'BITS', industry: 'Business Information Technology Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Enterprise Services & Software Basic', address: '10 Rue AL Akhtal, Tunis', phone: '+216 70 248 220' },
-            { name: 'BLUE IT', industry: 'Enterprise Architecture & Provisioning', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '67 Avenue Alain Savary, Tunis', phone: '+216 92 211 600' }
-        ];
-
-        // Match based on text similarity strings
-        const matches = localRealPartners.filter(p => 
-            p.name.toLowerCase().includes(cleanQ) || 
-            p.industry.toLowerCase().includes(cleanQ) || 
-            p.capabilities.toLowerCase().includes(cleanQ) ||
-            cleanQ.includes("integration") || cleanQ.includes("communication") || cleanQ.includes("data")
-        );
+        const queryText = queryInput.value;
+        if (!queryText || !queryText.trim()) return;
         
-        if (matches.length === 0) {
-            resultsContainer.innerHTML = `
-                <div style="text-align:center; padding: 40px 20px; border-radius:16px; border: 1px dashed var(--brand-red); background: rgba(230,0,18,0.02); max-width:750px; margin:0 auto;">
-                    <p style="color:var(--brand-red); font-weight:700; font-size:15px; text-transform:uppercase; margin-bottom:4px;">No Verified Partners Aligned</p>
-                    <p style="color:var(--text-muted); font-size:13px; margin:0;">The request did not pass the semantic baseline matrix constraint rule.</p>
-                </div>
-            `;
-            return;
-        }
-
-        resultsContainer.innerHTML = "";
-        matches.forEach((partner, index) => {
-            resultsContainer.innerHTML += `
-                <div class="card" style="max-width: 750px; margin: 0 auto 16px auto; text-align: left;">
-                    <div class="card-header">
-                        <div class="company-name">${partner.name}</div>
-                        <div class="badge">95% ALIGNED</div>
-                    </div>
-                    <div class="industry" style="color: var(--brand-red); font-weight: 600; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">
-                        ${partner.badge.toUpperCase()} &bull; ${partner.industry.toUpperCase()}
-                    </div>
-                    <div class="objectives" style="color: #4a5568; font-size: 14px; line-height: 1.5; margin-bottom: 14px;">
-                        <strong>Specialization Capabilities:</strong> ${partner.capabilities}.<br>
-                        <span style="font-size: 13px; color: var(--text-muted);">📍 ${partner.address}</span>
-                    </div>
-                    <div class="xai-justification">
-                        <div class="xai-title">Structural Alignment Analysis</div>
-                        <span class="streaming-text done">
-                            “ Architecture validation verification established at verified network node path: ${partner.phone}. ”
-                        </span>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    // Connect securely to your live python backend stream pipeline
-    eventSource = new EventSource(`/stream-match?query=${encodeURIComponent(queryText)}`);
-    
-    eventSource.addEventListener('initial_matches', (event) => {
-        const data = JSON.parse(event.data);
-        if (!data.matches || data.matches.length === 0) {
-            eventSource.close();
-            useLocalFallbackSearch(queryText);
-            return;
-        }
+        suggestionsPanel.classList.remove('visible');
+        if (eventSource) eventSource.close();
         
-        resultsContainer.innerHTML = "";
-        data.matches.forEach((partner, index) => {
-            const matchScore = Math.round(partner.similarity * 100);
-            resultsContainer.innerHTML += `
-                <div class="card" style="max-width: 750px; margin: 0 auto 16px auto; text-align: left;">
-                    <div class="card-header">
-                        <div class="company-name">${partner.company_name}</div>
-                        <div class="badge">${matchScore}% ALIGNED</div>
+        resultsContainer.innerHTML = `
+            <div style='text-align:center; padding: 40px 0;'>
+                <p style='color:var(--brand-red); font-weight:600; font-size:14px; text-transform:uppercase; letter-spacing:0.05em;'>Computing Semantic Proximity Vectors...</p>
+            </div>
+        `;
+
+        // Local static fallback to run perfectly whenever vectors are NULL
+        function useLocalFallbackSearch(q) {
+            const cleanQ = q.toLowerCase().trim();
+            const localRealPartners = [
+                { name: 'Tunisie Micro Informatique (TMI)', industry: 'Enterprise IT & Solutions Architecture', badge: 'Diamond Reseller', capabilities: 'Data Communication Master, Storage Master, Enterprise Services & Software Master', address: "8 Rue Socrate, Le Kram, Tunis", phone: "+216 71 860 666", health_score: 94, risk_level: 'Low', engagement_trend: 'En Hausse 📈', future_value_estimate: '€500K+' },
+                { name: 'Prologic Tunisie', industry: 'Enterprise IT & System Integration', badge: 'Gold Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Optical Basic', address: '19 Rue Félicien Challet, Tunis', phone: '+216 25 414 3232', health_score: 78, risk_level: 'Medium', engagement_trend: 'Stable ➡️', future_value_estimate: '€250K' },
+                { name: 'STE Autonomous Systems Engineering', industry: 'Systems Engineering & Automation', badge: 'Gold Reseller', capabilities: 'Data Communication Basic, Optical Advanced, Enterprise Services & Software Basic', address: 'Manar 1, Tunis', phone: '+216 71 703 733', health_score: 42, risk_level: 'High', engagement_trend: 'En Baisse 📉', future_value_estimate: '€50K' },
+                { name: 'ACT', industry: 'Advanced Computer Technologies', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '19 Rue Félicien Challaye, Tunis', phone: '+216 70 022 960', health_score: 88, risk_level: 'Low', engagement_trend: 'Stable ➡️', future_value_estimate: '€120K' },
+                { name: 'ADACTIM', industry: 'Managed Services & Cloud Integration', badge: 'Authorized Reseller', capabilities: 'Authorized Solution Integrator', address: 'Chotrana 2, Ariana', phone: '+216 31 340 033', health_score: 61, risk_level: 'Medium', engagement_trend: 'En Baisse 📉', future_value_estimate: '€180K' },
+                { name: 'BITS', industry: 'Business Information Technology Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Enterprise Services & Software Basic', address: '10 Rue AL Akhtal, Tunis', phone: '+216 70 248 220', health_score: 91, risk_level: 'Low', engagement_trend: 'En Hausse 📈', future_value_estimate: '€300K' },
+                { name: 'BLUE IT', industry: 'Enterprise Architecture & Provisioning', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '67 Avenue Alain Savary, Tunis', phone: '+216 92 211 600', health_score: 83, risk_level: 'Low', engagement_trend: 'Stable ➡️', future_value_estimate: '€95K' }
+            ];
+
+            const matches = localRealPartners.filter(p => 
+                p.name.toLowerCase().includes(cleanQ) || 
+                p.industry.toLowerCase().includes(cleanQ) || 
+                p.capabilities.toLowerCase().includes(cleanQ) ||
+                cleanQ.includes("integration") || cleanQ.includes("communication") || cleanQ.includes("data")
+            );
+            
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div style="text-align:center; padding: 40px 20px; border-radius:16px; border: 1px dashed var(--brand-red); background: rgba(230,0,18,0.02); max-width:750px; margin:0 auto;">
+                        <p style="color:var(--brand-red); font-weight:700; font-size:15px; text-transform:uppercase; margin-bottom:4px;">No Verified Partners Aligned</p>
+                        <p style="color:var(--text-muted); font-size:13px; margin:0;">The request did not pass the semantic baseline matrix constraint rule.</p>
                     </div>
-                    <div class="industry" style="color: var(--brand-red); font-weight: 600; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">${partner.industry}</div>
-                    <div class="objectives" style="color: #4a5568; font-size: 14px; line-height: 1.5; margin-bottom: 14px;">${partner.objectives}</div>
-                    <div class="xai-justification">
-                        <div class="xai-title">Structural Alignment Analysis</div>
-                        <span id="ai-text-${index}" class="streaming-text">Analyzing architectural data vectors...</span>
-                    </div>
-                </div>
-            `;
-        });
-    });
-    
-    eventSource.addEventListener('ai_chunk', (event) => {
-        const data = JSON.parse(event.data);
-        const textTarget = document.getElementById(`ai-text-${data.partner_index}`);
-        if (textTarget) {
-            if (textTarget.innerText.includes("Analyzing architectural data vectors...")) {
-                textTarget.innerText = "“ ";
+                `;
+                return;
             }
-            textTarget.innerText += data.text;
+
+            resultsContainer.innerHTML = "";
+            matches.forEach((partner, index) => {
+                let riskColor = "#2ed573";
+                if (partner.risk_level === "Medium") riskColor = "#ffa502";
+                if (partner.risk_level === "High") riskColor = "#ff4757";
+
+                resultsContainer.innerHTML += `
+                    <div class="card" style="max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #1a202c;">${partner.name}</div>
+                            <div style="background: #e60012; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;">Match : 95%</div>
+                        </div>
+                        <div style="color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 14px;">${partner.badge} &bull; ${partner.industry}</div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #edf2f7;">
+                            <div style="text-align: center; border-right: 1px solid #e2e8f0;">
+                                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Health Score</div>
+                                <div style="font-size: 22px; font-weight: 800; color: #2d3748;">${partner.health_score}/100</div>
+                            </div>
+                            <div style="text-align: center; border-right: 1px solid #e2e8f0;">
+                                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Risk Level</div>
+                                <div style="font-size: 16px; font-weight: 700; color: ${riskColor}; margin-top: 4px;">${partner.risk_level}</div>
+                            </div>
+                            <div style="text-align: center; border-right: 1px solid #e2e8f0;">
+                                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Trend</div>
+                                <div style="font-size: 15px; font-weight: 700; color: #2d3748; margin-top: 5px;">${partner.engagement_trend}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Future Value</div>
+                                <div style="font-size: 14px; font-weight: 700; color: #4a5568; margin-top: 6px;">${partner.future_value_estimate}</div>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 14px; color: #4a5568; line-height: 1.6; margin-bottom: 16px;">
+                            <strong>Ecosystem Capabilities:</strong> ${partner.capabilities}.<br>
+                            <span style="font-size: 13px; color: var(--text-muted);">${partner.address}</span>
+                        </div>
+                        <div style="background: #fff5f5; padding: 16px; border-radius: 8px; border-left: 4px solid #e60012; margin-bottom: 15px;">
+                            <div style="font-weight: 700; font-size: 13px; color: #e60012; margin-bottom: 4px; text-transform: uppercase;">AI Diagnostic & Risk Management</div>
+                            <span class="streaming-text done">“ Architecture validation verification established at verified network node path: ${partner.phone}. ”</span>
+                        </div>
+
+                        <div style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 15px;">
+                            <button onclick="buildContract('${partner.name.replace(/'/g, "\\'")}', ${index})" class="btn-proposal" style="background: #e60012; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">
+                                 Generate Partnership Proposal
+                            </button>
+                            <div id="proposal-box-${index}" style="margin-top: 12px; font-size: 13px; color: #2d3748; background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #cbd5e0; display: none; white-space: pre-line; line-height: 1.6;">
+                                Generating official document...
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
         }
-    });
-    
-    eventSource.addEventListener('done', () => {
-        document.querySelectorAll('.streaming-text').forEach(el => {
-            el.classList.add('done');
-            if(!el.innerText.endsWith(" ”")) el.innerText += " ”";
-        });
-        eventSource.close();
-    });
-    
-    eventSource.addEventListener('error', (err) => {
+
+        // Connexion au flux SSE du backend live pipeline
+        eventSource = new EventSource(`/stream-match?query=${encodeURIComponent(queryText)}`);
+        
+// 1. Écouter la réception de la liste des partenaires et des indicateurs de santé
+eventSource.addEventListener('initial_matches', (event) => {
+    const data = JSON.parse(event.data);
+    if (!data.matches || data.matches.length === 0) {
         eventSource.close();
         useLocalFallbackSearch(queryText);
-    });
-}
-
-
-function toggleDetailsRow(targetId) {
-    const targetDrawer = document.getElementById(targetId);
-    const isOpening = !targetDrawer.classList.contains('open');
-    
-    // Auto-collapse matching drawer sibling profiles inside this specific card element 
-    const parentCard = targetDrawer.closest('.partner-region-card');
-    parentCard.querySelectorAll('.region-hidden-drawer').forEach(drawer => {
-        drawer.classList.remove('open');
-    });
-    
-    // Toggle state execution
-    if (isOpening) {
-        targetDrawer.classList.add('open');
+        return;
     }
-}
-    </script>
+    
+    resultsContainer.innerHTML = "";
+    data.matches.forEach((partner, index) => {
+        
+        // === CORRECTION 1: Extraction propre et sécurisée des données de Supabase ===
+        const healthScore = partner.health_score; 
+        const riskLevel = partner.risk_level || 'Unknown';
+        const trend = partner.engagement_trend || 'Unknown';
+        const futureValue = partner.future_value_estimate || 'Unknown';
+
+        // === CORRECTION 2: Gestion robuste des couleurs de risques (insensible à la casse) ===
+        let riskColor = "#2ed573"; // Vert par défaut (Low Risk)
+        const checkRisk = riskLevel.trim().toLowerCase();
+        if (checkRisk === "medium") riskColor = "#ffa502"; // Orange
+        if (checkRisk === "high") riskColor = "#ff4757"; // Rouge
+        // ===========================================================================
+
+        const matchScore = Math.round(partner.similarity * 100);
+
+        resultsContainer.innerHTML += `
+            <div class="card" style="max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="font-size: 20px; font-weight: 700; color: #1a202c;">${partner.company_name}</div>
+                    <div style="background: #e60012; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;">
+                        Match : ${matchScore}%
+                    </div>
+                </div>
+                
+                <div style="color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 14px;">
+                    ${partner.industry || 'N/A'}
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #edf2f7;">
+                    <div style="text-align: center; border-right: 1px solid #e2e8f0;">
+                        <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Score Santé</div>
+                        <div style="font-size: 22px; font-weight: 800; color: #2d3748;">${healthScore !== undefined ? healthScore : 'N/A'}<span style="font-size: 12px; color: #718096;">/100</span></div>
+                    </div>
+                    <div style="text-align: center; border-right: 1px solid #e2e8f0;">
+                        <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Niveau Risque</div>
+                        <div style="font-size: 16px; font-weight: 700; color: ${riskColor}; margin-top: 4px;">${riskLevel}</div>
+                    </div>
+                    <div style="text-align: center; border-right: 1px solid #e2e8f0;">
+                        <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Tendance</div>
+                        <div style="font-size: 15px; font-weight: 700; color: #2d3748; margin-top: 5px;">${trend}</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Valeur Future</div>
+                        <div style="font-size: 14px; font-weight: 700; color: #4a5568; margin-top: 6px;">${futureValue}</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 14px; color: #4a5568; line-height: 1.6; margin-bottom: 16px;">
+                    <strong>Capacités de l'écosystème :</strong> ${partner.objectives || 'Aucune capacité listée'}
+                </div>
+
+                <div style="background: #fff5f5; padding: 16px; border-radius: 8px; border-left: 4px solid #e60012; margin-bottom: 15px;">
+                    <div style="font-weight: 700; font-size: 13px; color: #e60012; margin-bottom: 4px; text-transform: uppercase;">
+                        Diagnostic IA & Gestion des Risques
+                    </div>
+                    <span id="ai-text-${index}" class="streaming-text" style="font-size: 14px; color: #2d3748; line-height: 1.5;">Analyse en cours des matrices sémantiques...</span>
+                </div>
+
+                <div style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 15px;">
+                    <button onclick="buildContract('${partner.company_name.replace(/'/g, "\\'")}', ${index})" class="btn-proposal" style="background: #e60012; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">
+                        Générer la proposition commerciale
+                    </button>
+                    <div id="proposal-box-${index}" style="margin-top: 12px; font-size: 13px; color: #2d3748; background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #cbd5e0; display: none; white-space: pre-line; line-height: 1.6;">
+                        Génération du document officiel en cours...
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+});
+        
+        // 2. Écouter la saisie de texte de l'IA au fur et à mesure (Streaming)
+        eventSource.addEventListener('ai_chunk', (event) => {
+            const chunkData = JSON.parse(event.data);
+            const textTarget = document.getElementById(`ai-text-${chunkData.partner_index}`);
+            if (textTarget) {
+                if (textTarget.innerText === "Analyse en cours des matrices sémantiques...") {
+                    textTarget.innerText = "“ ";
+                }
+                textTarget.innerText += chunkData.text;
+            }
+        });
+        
+        eventSource.addEventListener('done', () => {
+            document.querySelectorAll('.streaming-text').forEach(el => {
+                el.classList.add('done');
+                if(!el.innerText.endsWith(" ”") && el.innerText !== "") el.innerText += " ”";
+            });
+            eventSource.close();
+        });
+        
+        eventSource.addEventListener('error', (err) => {
+            eventSource.close();
+            useLocalFallbackSearch(queryText);
+        });
+    }
+
+   // Fonction AJAX pour générer le contrat officiel
+    function buildContract(partnerName, index) {
+        const queryText = queryInput.value;
+        const proposalBox = document.getElementById(`proposal-box-${index}`);
+        
+        proposalBox.style.display = "block";
+        // On prépare la boîte en nettoyant les anciens boutons s'il y en avait
+        proposalBox.innerHTML = `<div id="proposal-text-${index}">AI Assistant is drafting the formal strategic proposal in English...</div>`;
+        
+        fetch('/generate-proposal', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                partner_name: partnerName,
+                query_requirements: queryText
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // On injecte le texte de la proposition ET le bouton de copie propre en dessous
+            proposalBox.innerHTML = `
+                <div id="proposal-text-${index}" style="margin-bottom: 12px;">${data.proposal}</div>
+                <button onclick="copyProposalToClipboard(${index})" id="copy-btn-${index}" style="background: #2d3748; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    Copy Proposal
+                </button>
+            `;
+        })
+        .catch(err => {
+            console.error(err);
+            proposalBox.innerHTML = "Error encountered while compiling the official document.";
+        });
+    }
+
+    // Nouvelle fonction pour copier le texte dans le presse-papiers
+    function copyProposalToClipboard(index) {
+        const textToCopy = document.getElementById(`proposal-text-${index}`).innerText;
+        const copyBtn = document.getElementById(`copy-btn-${index}`);
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            // Petit effet visuel sympa pour confirmer la copie
+            copyBtn.innerText = "Copied!";
+            copyBtn.style.background = "#2ed573";
+            
+            // Rebasculer le bouton à son état d'origine après 2 secondes
+            setTimeout(() => {
+                copyBtn.innerText = "Copy Proposal";
+                copyBtn.style.background = "#2d3748";
+            }, 2000);
+        }).catch(err => {
+            console.error("Failed to copy text: ", err);
+        });
+    }
+    
+</script>
 </body>
 </html>
