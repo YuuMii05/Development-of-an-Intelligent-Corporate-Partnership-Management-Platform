@@ -5,7 +5,7 @@
 
 ---
 
-## 🎯 Concept du projet
+## Concept du projet
 
 Cette plateforme aide les équipes commerciales de **Huawei** à identifier, en temps réel,
 le **meilleur partenaire intégrateur** capable de répondre à un besoin client donné.
@@ -25,7 +25,7 @@ Pour chaque partenaire identifié, l'application :
 
 ---
 
-## 🧩 Architecture & fonctionnement
+## Architecture & fonctionnement
 
 ```
 ┌──────────────┐    requête client     ┌─────────────────────┐
@@ -72,7 +72,7 @@ Pour chaque partenaire identifié, l'application :
 
 ---
 
-## 📂 Structure du projet
+## Structure du projet
 
 ```
 partner-backend/
@@ -100,7 +100,7 @@ partner-backend/
 
 ---
 
-## 🚀 Installation & lancement
+## Installation & lancement
 
 ### Prérequis
 
@@ -121,7 +121,7 @@ SUPABASE_URL="https://<votre-projet>.supabase.co"
 SUPABASE_SERVICE_KEY="<votre-clé-supabase>"
 ```
 
-> ⚠️ Le domaine se termine bien par **`.co`** (et non `.com`).
+> Le domaine se termine bien par **`.co`** (et non `.com`).
 
 ### 2. Installer les dépendances
 
@@ -146,7 +146,7 @@ puis insère les profils dans Supabase.
 uvicorn app:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Puis ouvrir 👉 **http://127.0.0.1:8000**
+Puis ouvrir **http://127.0.0.1:8000**
 
 ---
 
@@ -171,7 +171,7 @@ GET /stream-match?query=infrastructure de stockage cloud
 
 ---
 
-## 🔒 Sécurité
+## Sécurité
 
 - Les clés et URL sont chargées depuis `.env` (jamais codées en dur dans le code).
 - Le fichier `.env` est ignoré par Git (`.gitignore`).
@@ -181,13 +181,13 @@ GET /stream-match?query=infrastructure de stockage cloud
 
 ---
 
-## 🧪 État du projet
+## État du projet
 
-✅ Connexion Supabase fonctionnelle (recherche vectorielle opérationnelle)
-✅ Embeddings et matching sémantique validés (7 partenaires de référence)
-✅ Diagnostics IA en streaming temps réel
-✅ Génération automatique de propositions commerciales
-✅ Interface : liste des partenaires avec fiches « Profil » et « Contact »
+Connexion Supabase fonctionnelle (recherche vectorielle opérationnelle)
+Embeddings et matching sémantique validés (7 partenaires de référence)
+Diagnostics IA en streaming temps réel
+Génération automatique de propositions commerciales
+Interface : liste des partenaires avec fiches « Profil » et « Contact »
 
 ---
 
