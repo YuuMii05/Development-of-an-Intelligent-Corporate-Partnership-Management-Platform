@@ -58,7 +58,7 @@ Pour chaque partenaire identifié, l'application :
 
 ---
 
-## 🛠️ Stack technique
+## Stack technique
 
 | Couche            | Technologie                                              |
 |-------------------|---------------------------------------------------------|
