@@ -28,13 +28,13 @@ Pour chaque partenaire identifié, l'application :
 ## Architecture & fonctionnement
 
 ```
-┌──────────────┐    requête client     ┌─────────────────────┐
-│  index.html  │ ───────────────────►  │   FastAPI (app.py)  │
+┌──────────────┐    requête client      ┌─────────────────────┐
+│  index.html  │ ───────────────────►   │   FastAPI (app.py)  │
 │  (interface) │ ◄───── streaming ────  │                     │
 └──────────────┘   (SSE temps réel)     └──────────┬──────────┘
                                                     │
                        ┌────────────────────────────┼───────────────────────┐
-                       ▼                             ▼                        ▼
+                       ▼                            ▼                       ▼
               ┌─────────────────┐         ┌────────────────────┐   ┌──────────────────┐
               │     Ollama      │         │      Supabase      │   │     Ollama       │
               │ nomic-embed-text│         │  (PostgreSQL +     │   │     llama3       │
@@ -152,7 +152,7 @@ Puis ouvrir **http://127.0.0.1:8000**
 
 ## 🔌 Points d'entrée de l'API
 
-| Méthode | Route                 | Description                                                        |
+| Méthode | Route                 | Description                                                       |
 |---------|-----------------------|-------------------------------------------------------------------|
 | `GET`   | `/`                   | Sert l'interface utilisateur (`index.html`)                       |
 | `GET`   | `/stream-match`       | Recherche sémantique + diagnostic IA en streaming (SSE)           |
