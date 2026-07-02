@@ -28,10 +28,10 @@ Pour chaque partenaire identifié, l'application :
 ## Architecture & fonctionnement
 
 ```
-┌──────────────┐    requête client      ┌─────────────────────┐
-│  index.html  │ ───────────────────►   │   FastAPI (app.py)  │
-│  (interface) │ ◄───── streaming ────  │                     │
-└──────────────┘   (SSE temps réel)     └──────────┬──────────┘
+┌──────────────┐    requête client       ┌─────────────────────┐
+│  index.html  │ ──────────────────────► │   FastAPI (app.py)  │
+│  (interface) │ ◄───── streaming ────── │                     │
+└──────────────┘   (SSE temps réel)      └──────────┬──────────┘
                                                     │
                        ┌────────────────────────────┼───────────────────────┐
                        ▼                            ▼                       ▼
