@@ -156,7 +156,7 @@ Puis ouvrir **http://127.0.0.1:8000**
 
 ---
 
-## 🔌 Points d'entrée de l'API
+## Points d'entrée de l'API
 
 | Méthode | Route                 | Description                                                       |
 |---------|-----------------------|-------------------------------------------------------------------|
