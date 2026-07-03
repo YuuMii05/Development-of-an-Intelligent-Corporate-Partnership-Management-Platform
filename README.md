@@ -23,6 +23,9 @@ Pour chaque partenaire identifié, l'application :
 3. **Génère un diagnostic d'alignement** rédigé par une IA, en streaming, mot par mot ;
 4. **Produit automatiquement une proposition commerciale B2B** formelle prête à l'envoi.
 
+Un bouton **Meeting Assistant** dans la barre de navigation permet également d'ouvrir
+l'application compagnon *AI Meeting Assistant* (projet séparé, servi sur le port `8001`).
+
 ---
 
 ## Architecture & fonctionnement
@@ -77,7 +80,8 @@ Pour chaque partenaire identifié, l'application :
 ```
 partner-backend/
 ├── app.py              # Application FastAPI (point d'entrée principal)
-├── seed_partners.py    # Script d'initialisation : insère les partenaires + embeddings
+├── seed_partners.py    # Script d'initialisation : insère les 7 partenaires de base + embeddings
+├── add_partners.py     # Ajoute 12 partenaires Huawei Tunisie supplémentaires (sans doublons)
 ├── index.html          # Interface utilisateur complète
 ├── .env                # Variables secrètes (NON versionné)
 ├── logo.jpg / lp1.jpg  # Ressources visuelles
@@ -134,11 +138,13 @@ pip install -r requirements.txt
 ### 3. Initialiser la base (une seule fois)
 
 ```bash
-python seed_partners.py
+python seed_partners.py   # 7 partenaires de base
+python add_partners.py    # + 12 partenaires Huawei Tunisie (19 au total)
 ```
 
-Ce script vide la table, génère un embedding pour chaque partenaire via Ollama,
-puis insère les profils dans Supabase.
+`seed_partners.py` vide la table, génère un embedding pour chaque partenaire via Ollama,
+puis insère les profils dans Supabase. `add_partners.py` complète la base avec 12 partenaires
+supplémentaires en ignorant automatiquement les doublons déjà présents.
 
 ### 4. Lancer l'application
 
@@ -184,10 +190,11 @@ GET /stream-match?query=infrastructure de stockage cloud
 ## État du projet
 
 Connexion Supabase fonctionnelle (recherche vectorielle opérationnelle)
-Embeddings et matching sémantique validés (7 partenaires de référence)
+Embeddings et matching sémantique validés (19 partenaires de référence)
 Diagnostics IA en streaming temps réel
 Génération automatique de propositions commerciales
 Interface : liste des partenaires avec fiches « Profil » et « Contact »
+Bouton « Meeting Assistant » vers l'application compagnon
 
 ---
 
