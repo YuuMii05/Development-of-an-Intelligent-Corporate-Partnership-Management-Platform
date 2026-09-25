@@ -1609,6 +1609,45 @@
     let eventSource = null;
     let currentMatchNames = [];
 
+    // Official Huawei partner directory (Tunisia): real tier, address and phone for each partner
+    const localRealPartners = [
+        { name: 'Tunisie Micro Informatique (TMI)', industry: 'Enterprise IT & Solutions Architecture', badge: 'Diamond Reseller', capabilities: 'Data Communication Master, Storage Master, Enterprise Services & Software Master', address: "8 Rue Socrate, Le Kram, Tunis", phone: "+216 71 860 666" },
+        { name: 'Prologic Tunisie', industry: 'Enterprise IT & System Integration', badge: 'Gold Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Optical Basic', address: '19 Rue Félicien Challet, Tunis', phone: '+216 25 414 3232' },
+        { name: 'STE Autonomous Systems Engineering', industry: 'Systems Engineering & Automation', badge: 'Gold Reseller', capabilities: 'Data Communication Basic, Optical Advanced, Enterprise Services & Software Basic', address: 'Manar 1, Tunis', phone: '+216 71 703 733' },
+        { name: 'ACT', industry: 'Advanced Computer Technologies', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '19 Rue Félicien Challaye, Tunis', phone: '+216 70 022 960' },
+        { name: 'ADACTIM', industry: 'Managed Services & Cloud Integration', badge: 'Authorized Reseller', capabilities: 'Authorized Solution Integrator', address: 'Chotrana 2, Ariana', phone: '+216 31 340 033' },
+        { name: 'BITS', industry: 'Business Information Technology Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Enterprise Services & Software Basic', address: '10 Rue AL Akhtal, Tunis', phone: '+216 70 248 220' },
+        { name: 'BLUE IT', industry: 'Enterprise Architecture & Provisioning', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '67 Avenue Alain Savary, Tunis', phone: '+216 92 211 600' },
+        { name: 'Smart Tunisia', industry: 'IT Distribution & Collaboration', badge: 'Gold Distribution Partner', capabilities: 'Data Communication Basic, Intelligent Collaboration Basic', address: 'Z.I. La Charguia I, Tunis', phone: '+216 71 115 600' },
+        { name: 'Computer Distribution S.A', industry: 'IT Distribution & System Integration', badge: 'Gold Distribution Partner', capabilities: 'Data Communication Basic, Storage Basic, Enterprise Services & Software Basic', address: '16 Rue du 8612, Charguia 1, Tunis', phone: '+216 56 836 698' },
+        { name: 'EASYTEK', industry: 'IT Solutions & Reselling', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Reselling', address: '80 Avenue Mouaouia Ibn Abi Sofian, El Menzah 7, Tunis', phone: '+216 70 813 287' },
+        { name: 'HES Tunisie', industry: 'Enterprise Hardware & Services', badge: 'Authorized Reseller', capabilities: 'Enterprise Infrastructure & Services', address: 'Les Berges du Lac, 1053 Tunis', phone: '+216 22 129 930' },
+        { name: 'Network Associates', industry: 'Networking & Infrastructure', badge: 'Authorized Reseller', capabilities: 'Networking & Enterprise Infrastructure', address: 'Rue du Lac Constance, Tunis', phone: '+216 98 700 126' },
+        { name: 'OPENYX', industry: 'Data Communication Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Basic', address: 'El Manzah 9, Ariana', phone: '+216 98 261 065' },
+        { name: 'SIMOP Tunisie', industry: 'ICT Training & Integration', badge: 'Authorized Reseller', capabilities: 'Certified Huawei Authorized Learning Partner, Enterprise Integration', address: 'Z.I. Charguia 1, 2035 Tunis', phone: '+216 71 115 753' },
+        { name: 'STE Standard Sharing Software (3S)', industry: 'Software & Storage Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Basic, Storage Advanced, Enterprise Services & Software Basic', address: 'Monplaisir, Tunis', phone: '+216 71 111 100' },
+        { name: 'TELCOTEC Integration', industry: 'Telecom & Systems Integration', badge: 'Authorized Reseller', capabilities: 'Telecom & Systems Integration', address: 'MBA Informatique, Tunis', phone: '+216 92 359 384' },
+        { name: 'Tunisys', industry: 'Enterprise IT Services', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Services', address: '124 Avenue de la Liberté, 1002 Tunis', phone: '+216 89 686 378' },
+        { name: 'Waycon', industry: 'IT Infrastructure & Consulting', badge: 'Authorized Reseller', capabilities: 'IT Infrastructure & Consulting', address: 'Charguia II, Tunis', phone: '+216 71 941 231' },
+        { name: 'Carthage', industry: 'IT Solutions & Reselling', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Reselling', address: 'Borj Cedria, Ben Arous', phone: '+216 71 749 100' }
+    ];
+    const directoryByName = Object.fromEntries(localRealPartners.map(p => [p.name.toLowerCase(), p]));
+
+    // Info grid (original card look) filled only with real data from the partner directory
+    function partnerInfoGrid(info) {
+        const box = (label, value, last) => `
+            <div style="text-align: center;${last ? '' : ' border-right: 1px solid #e2e8f0;'}">
+                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">${label}</div>
+                <div style="font-size: 14px; font-weight: 700; color: #2d3748; margin-top: 6px;">${escapeHtml(value)}</div>
+            </div>`;
+        return `
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #edf2f7;">
+                ${box('Partner Tier', info?.badge || 'N/A')}
+                ${box('Location', info?.address || 'N/A')}
+                ${box('Contact', info?.phone || 'N/A', true)}
+            </div>`;
+    }
+
     // Escape text from the database / AI before inserting it as HTML
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1672,28 +1711,6 @@
         // Local static fallback to run perfectly whenever vectors are NULL
         function useLocalFallbackSearch(q) {
             const cleanQ = q.toLowerCase().trim();
-            const localRealPartners = [
-                { name: 'Tunisie Micro Informatique (TMI)', industry: 'Enterprise IT & Solutions Architecture', badge: 'Diamond Reseller', capabilities: 'Data Communication Master, Storage Master, Enterprise Services & Software Master', address: "8 Rue Socrate, Le Kram, Tunis", phone: "+216 71 860 666" },
-                { name: 'Prologic Tunisie', industry: 'Enterprise IT & System Integration', badge: 'Gold Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Optical Basic', address: '19 Rue Félicien Challet, Tunis', phone: '+216 25 414 3232' },
-                { name: 'STE Autonomous Systems Engineering', industry: 'Systems Engineering & Automation', badge: 'Gold Reseller', capabilities: 'Data Communication Basic, Optical Advanced, Enterprise Services & Software Basic', address: 'Manar 1, Tunis', phone: '+216 71 703 733' },
-                { name: 'ACT', industry: 'Advanced Computer Technologies', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '19 Rue Félicien Challaye, Tunis', phone: '+216 70 022 960' },
-                { name: 'ADACTIM', industry: 'Managed Services & Cloud Integration', badge: 'Authorized Reseller', capabilities: 'Authorized Solution Integrator', address: 'Chotrana 2, Ariana', phone: '+216 31 340 033' },
-                { name: 'BITS', industry: 'Business Information Technology Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Enterprise Services & Software Basic', address: '10 Rue AL Akhtal, Tunis', phone: '+216 70 248 220' },
-                { name: 'BLUE IT', industry: 'Enterprise Architecture & Provisioning', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '67 Avenue Alain Savary, Tunis', phone: '+216 92 211 600' },
-                { name: 'Smart Tunisia', industry: 'IT Distribution & Collaboration', badge: 'Gold Distribution Partner', capabilities: 'Data Communication Basic, Intelligent Collaboration Basic', address: 'Z.I. La Charguia I, Tunis', phone: '+216 71 115 600' },
-                { name: 'Computer Distribution S.A', industry: 'IT Distribution & System Integration', badge: 'Gold Distribution Partner', capabilities: 'Data Communication Basic, Storage Basic, Enterprise Services & Software Basic', address: '16 Rue du 8612, Charguia 1, Tunis', phone: '+216 56 836 698' },
-                { name: 'EASYTEK', industry: 'IT Solutions & Reselling', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Reselling', address: '80 Avenue Mouaouia Ibn Abi Sofian, El Menzah 7, Tunis', phone: '+216 70 813 287' },
-                { name: 'HES Tunisie', industry: 'Enterprise Hardware & Services', badge: 'Authorized Reseller', capabilities: 'Enterprise Infrastructure & Services', address: 'Les Berges du Lac, 1053 Tunis', phone: '+216 22 129 930' },
-                { name: 'Network Associates', industry: 'Networking & Infrastructure', badge: 'Authorized Reseller', capabilities: 'Networking & Enterprise Infrastructure', address: 'Rue du Lac Constance, Tunis', phone: '+216 98 700 126' },
-                { name: 'OPENYX', industry: 'Data Communication Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Basic', address: 'El Manzah 9, Ariana', phone: '+216 98 261 065' },
-                { name: 'SIMOP Tunisie', industry: 'ICT Training & Integration', badge: 'Authorized Reseller', capabilities: 'Certified Huawei Authorized Learning Partner, Enterprise Integration', address: 'Z.I. Charguia 1, 2035 Tunis', phone: '+216 71 115 753' },
-                { name: 'STE Standard Sharing Software (3S)', industry: 'Software & Storage Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Basic, Storage Advanced, Enterprise Services & Software Basic', address: 'Monplaisir, Tunis', phone: '+216 71 111 100' },
-                { name: 'TELCOTEC Integration', industry: 'Telecom & Systems Integration', badge: 'Authorized Reseller', capabilities: 'Telecom & Systems Integration', address: 'MBA Informatique, Tunis', phone: '+216 92 359 384' },
-                { name: 'Tunisys', industry: 'Enterprise IT Services', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Services', address: '124 Avenue de la Liberté, 1002 Tunis', phone: '+216 89 686 378' },
-                { name: 'Waycon', industry: 'IT Infrastructure & Consulting', badge: 'Authorized Reseller', capabilities: 'IT Infrastructure & Consulting', address: 'Charguia II, Tunis', phone: '+216 71 941 231' },
-                { name: 'Carthage', industry: 'IT Solutions & Reselling', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Reselling', address: 'Borj Cedria, Ben Arous', phone: '+216 71 749 100' }
-            ];
-
             // Keyword match: a partner is shown only if a word of the query appears in its profile
             const keywords = cleanQ.split(/[^a-z0-9]+/).filter(w => w.length >= 4);
             const matches = localRealPartners.filter(p => {
@@ -1715,20 +1732,21 @@
             currentMatchNames = matches.map(p => p.name);
             matches.forEach((partner, index) => {
                 resultsContainer.innerHTML += `
-                    <div class="card" style="max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
+                    <div class="card" style="width: 100%; box-sizing: border-box; max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <div style="font-size: 20px; font-weight: 700; color: #1a202c;">${partner.name}</div>
                             <div style="background: #e60012; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;">Keyword match</div>
                         </div>
-                        <div style="color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 14px;">${partner.badge} &bull; ${partner.industry}</div>
+                        <div style="color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 14px;">${partner.industry}</div>
+
+                        ${partnerInfoGrid(partner)}
 
                         <div style="font-size: 14px; color: #4a5568; line-height: 1.6; margin-bottom: 16px;">
-                            <strong>Ecosystem Capabilities:</strong> ${partner.capabilities}.<br>
-                            <span style="font-size: 13px; color: var(--text-muted);">${partner.address}</span>
+                            <strong>Ecosystem Capabilities:</strong> ${partner.capabilities}.
                         </div>
                         <div style="background: #fff5f5; padding: 16px; border-radius: 8px; border-left: 4px solid #e60012; margin-bottom: 15px;">
                             <div style="font-weight: 700; font-size: 13px; color: #e60012; margin-bottom: 4px; text-transform: uppercase;">AI Alignment Analysis</div>
-                            <span class="streaming-text done">Offline result: the live AI diagnostic is unavailable. Contact: ${partner.phone}</span>
+                            <span class="streaming-text done" style="font-size: 14px; color: #718096;">Offline mode: the live AI analysis will appear here when the AI engine is connected.</span>
                         </div>
 
                         <div style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 15px;">
@@ -1763,7 +1781,7 @@ eventSource.addEventListener('initial_matches', (event) => {
         const matchScore = Math.round(partner.similarity * 100);
 
         resultsContainer.innerHTML += `
-            <div class="card" style="max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
+            <div class="card" style="width: 100%; box-sizing: border-box; max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="font-size: 20px; font-weight: 700; color: #1a202c;">${escapeHtml(partner.company_name)}</div>
@@ -1775,6 +1793,8 @@ eventSource.addEventListener('initial_matches', (event) => {
                 <div style="color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 14px;">
                     ${escapeHtml(partner.industry || 'N/A')}
                 </div>
+
+                ${partnerInfoGrid(directoryByName[String(partner.company_name || '').toLowerCase()])}
 
                 <div style="font-size: 14px; color: #4a5568; line-height: 1.6; margin-bottom: 16px;">
                     <strong>Ecosystem Capabilities:</strong> ${escapeHtml(partner.objectives || 'No capabilities listed')}
@@ -1824,10 +1844,6 @@ eventSource.addEventListener('initial_matches', (event) => {
             console.error("Live pipeline error:", err.data || err);
             eventSource.close();
             useLocalFallbackSearch(queryText);
-            resultsContainer.insertAdjacentHTML('afterbegin', `
-                <div style="max-width: 800px; margin: 0 auto 16px auto; padding: 12px 16px; border-radius: 8px; background: #fffaf0; border-left: 4px solid #ffa502; color: #7b5e00; font-size: 13px; text-align: left;">
-                    The live AI engine is unavailable${err.data ? ': ' + escapeHtml(err.data) : ''}. Showing offline partner results instead.
-                </div>`);
         });
     }
 
