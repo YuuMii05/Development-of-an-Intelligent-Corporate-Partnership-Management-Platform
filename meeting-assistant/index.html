@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meeting Assistant</title>
+    <style>
+        :root {
+            --brand-red: #e60012;
+            --bg-dark: #0f172a;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+        }
+        body { 
+            background: #f8fafc; 
+            color: var(--text-main); 
+            margin: 0;
+            padding: 0;
+            overflow: hidden; 
+            height: 100vh;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 0 20px;
+        }
+        
+        .main-card { 
+            background: var(--card-bg); 
+            border-radius: 16px; 
+            padding: 30px; 
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0; 
+            margin-bottom: 24px; 
+        }
+        label { 
+            display: block; 
+            font-weight: 700; 
+            font-size: 14px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            color: #475569; 
+            margin-bottom: 10px; 
+        }
+        textarea { 
+            width: 100%; 
+            height: 180px; 
+            padding: 16px; 
+            border-radius: 10px; 
+            border: 1px solid #cbd5e1; 
+            font-size: 14px; 
+            line-height: 1.6; 
+            resize: vertical; 
+            outline: none; 
+            transition: border 0.2s; 
+        }
+        textarea:focus { 
+            border-color: var(--brand-red); 
+            box-shadow: 0 0 0 3px rgba(230,0,18,0.1); 
+        }
+        
+        .btn-primary { 
+            background: var(--brand-red); 
+            color: white; 
+            border: none; 
+            padding: 14px 28px; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            font-size: 15px; 
+            cursor: pointer; 
+            width: 100%; 
+            transition: background 0.2s; 
+            margin-top: 15px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+        }
+        .btn-primary:hover { background: #b8000e; }
+        
+        #outputSection { 
+            display: none; 
+            margin-top: 30px; 
+        }
+        .output-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 16px; 
+            border-bottom: 2px solid #edf2f7; 
+            padding-bottom: 10px; 
+        }
+        .output-header h2 { 
+            font-size: 18px; 
+            color: #0f172a; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+        }
+        
+        .editable-review-box { 
+            background: #fff; 
+            border: 2px dashed #cbd5e1; 
+            border-radius: 12px; 
+            padding: 20px; 
+            min-height: 300px; 
+            font-size: 14px; 
+            line-height: 1.7; 
+            outline: none; 
+            color: #334155; 
+            white-space: pre-wrap; 
+        }
+        .editable-review-box:focus { 
+            border-color: #2ed573; 
+            background: #fafdfb; 
+        }
+        
+        .action-bar { 
+            display: flex; 
+            gap: 12px; 
+            margin-top: 16px; 
+        }
+        .btn-action { 
+            flex: 1; 
+            padding: 12px; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            font-size: 14px; 
+            cursor: pointer; 
+            border: none; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px; 
+        }
+        .btn-copy { background: #0f172a; color: white; }
+        
+        /* Meeting metrics dashboard (all values computed from the transcript) */
+        .metrics-block { margin-bottom: 24px; }
+        .metrics-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin-bottom: 10px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .kpi { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; }
+        .kpi-value { font-size: 28px; font-weight: 800; color: #0f172a; line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .kpi-label { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
+        .kpi-note { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+        .kpi-meter { height: 6px; background: #edf2f7; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .kpi-meter span { display: block; height: 100%; background: var(--brand-red); border-radius: 4px; }
+        .share-row { display: grid; grid-template-columns: 110px 1fr 90px; align-items: center; gap: 10px; padding: 5px 0; }
+        .share-name { font-size: 13px; font-weight: 600; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .share-track { height: 14px; background: #edf2f7; border-radius: 4px; overflow: hidden; }
+        .share-bar { height: 100%; background: var(--brand-red); border-radius: 0 4px 4px 0; }
+        .share-row:hover .share-bar { background: #b8000e; }
+        .share-value { font-size: 13px; color: #334155; font-variant-numeric: tabular-nums; text-align: right; }
+        .actions-table-wrap { overflow-x: auto; }
+        .actions-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; }
+        .actions-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+        .actions-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #1e293b; vertical-align: top; }
+        .actions-table tr:last-child td { border-bottom: none; }
+        .missing { color: #94a3b8; font-style: italic; }
+        .prio { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; border: 1px solid #cbd5e1; color: #334155; white-space: nowrap; }
+        .prio-high { border-color: #e60012; color: #b8000e; }
+        @media (max-width: 700px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .share-row { grid-template-columns: 80px 1fr 80px; } }
+
+        .badge-hitl { 
+            background: #fff8e1; 
+            color: #ffb300; 
+            border: 1px solid #ffe082; 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            display: inline-block; 
+        }
+    </style>
+</head>
+<body>
+
+<div style="position: absolute; top: 0; left: 0; width: 100vw; height: 240px; background: url('static/sp1.jpg') no-repeat center top; background-size: cover; z-index: 1;">
+    <div style="position: absolute; bottom: -2px; left: 0; width: 100%; height: 120px; background: linear-gradient(to bottom, rgba(248, 250, 252, 0) 0%, rgba(248, 250, 252, 0.7) 50%, rgba(248, 250, 252, 1) 100%);"></div>
+    
+    <div style="position: absolute; top: 16px; left: 40px; z-index: 10;">
+        <a id="homeLink" href="http://127.0.0.1:8000/" title="Back to Huawei Cloud Match" style="display: inline-block; cursor: pointer;">
+            <img src="static/logo.jpg" alt="Huawei Logo" style="height: 55px; width: auto; object-fit: contain;">
+        </a>
+    </div>
+
+    <div style="text-align: center; margin-top: 75px; padding: 0 20px; position: relative; z-index: 5;">
+        <h1 style="font-size: 34px; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.03em;">
+            AI Meeting <span style="color: var(--brand-red);">Assistant</span>
+        </h1>
+        <p style="color: #475569; font-size: 14.5px; max-width: 580px; margin: 0 auto; line-height: 1.5; opacity: 0.95;">
+            Convert raw discussions into structured summaries, action items, and follow-up drafts instantly.
+        </p>
+    </div>
+</div>
+
+<div class="container" style="margin-top: 265px; position: relative; z-index: 10; padding-bottom: 60px;">
+    
+    <div class="main-card">
+        <label for="transcriptInput">Paste Meeting Notes or Audio Transcript</label>
+        <textarea id="transcriptInput" placeholder="Example: John said we need to push the server deployment to next Tuesday. Sarah agreed but mentioned that the storage nodes are not calibrated yet. Alex will handle the calibration by Friday..."></textarea>
+        
+        <button onclick="processMeeting()" class="btn-primary" id="processBtn">
+            Analyze & Extract Corporate Assets
+        </button>
+    </div>
+
+    <div id="outputSection" class="main-card" style="background: #f8fafc; border-color: #e2e8f0;">
+        <div class="output-header">
+            <div>
+                <h2>Draft Review Studio</h2>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Review and edit the AI output before copying or sharing it.</p>
+            </div>
+            <span class="badge-hitl">Editable Draft</span>
+        </div>
+
+        <div id="metricsDashboard"></div>
+
+        <div class="metrics-title">Editable Report</div>
+        <div id="aiOutputReview" class="editable-review-box" contenteditable="true"></div>
+
+        <div class="action-bar">
+            <button onclick="copyApprovedText()" id="copyBtn" class="btn-action btn-copy">
+                Copy Approved Intelligence
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // The AI backend runs on port 8001; when the page is opened with Live Server it calls it there
+    const API_BASE = location.port === '8001' ? '' : 'http://127.0.0.1:8001';
+
+    // Back to the partner site: Live Server copy (5500) or the backend-served site (8000)
+    document.getElementById('homeLink').href = location.port === '5501' ? 'http://127.0.0.1:5500/' : 'http://127.0.0.1:8000/';
+
+    function processMeeting() {
+        const transcriptText = document.getElementById('transcriptInput').value;
+        const processBtn = document.getElementById('processBtn');
+        const outputSection = document.getElementById('outputSection');
+        const aiOutputReview = document.getElementById('aiOutputReview');
+
+        if (!transcriptText || !transcriptText.trim()) {
+            alert("Please paste some text or notes to process!");
+            return;
+        }
+
+        processBtn.disabled = true;
+        outputSection.style.display = "none";
+        processBtn.innerText = "Analyzing with Llama 3... this can take up to a minute";
+
+        // --- BACKEND FETCH CONNECTION ---
+        fetch(`${API_BASE}/analyze-meeting`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: transcriptText })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Server responded with a network error.");
+            }
+            return response.json();
+        })
+        .then(data => {
+            processBtn.disabled = false;
+            processBtn.innerText = "Analyze & Extract Corporate Assets";
+
+            if (data.success && data.analysis) {
+                aiOutputReview.innerText = data.analysis;
+                renderMetrics(data.metrics, data.action_items || []);
+
+                // Reveal result layout node
+                outputSection.style.display = "block";
+                document.body.style.overflow = "auto";
+                document.body.style.height = "auto";
+
+                setTimeout(() => {
+                    outputSection.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            } else {
+                alert("The AI analysis failed: " + (data.error || "Unknown error"));
+            }
+        })
+        .catch(err => {
+            processBtn.disabled = false;
+            processBtn.innerText = "Analyze & Extract Corporate Assets";
+            console.error("Connection tracking error:", err);
+            alert("Could not reach the backend. Make sure app.py is running on port 8001.");
+        });
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // Every number here comes from the backend, computed from the transcript itself
+    function renderMetrics(m, actions) {
+        const box = document.getElementById('metricsDashboard');
+        if (!m) { box.innerHTML = ''; return; }
+        const pct = v => v === null || v === undefined ? '—' : v + '%';
+        const kpi = (value, label, note, meter) => `
+            <div class="kpi">
+                <div class="kpi-value">${value}</div>
+                <div class="kpi-label">${label}</div>
+                ${meter !== undefined && meter !== null ? `<div class="kpi-meter"><span style="width:${meter}%"></span></div>` : ''}
+                <div class="kpi-note">${note}</div>
+            </div>`;
+        const n = m.action_items;
+        const withOwner = m.with_owner, withDeadline = m.with_deadline;
+
+        const shareRows = (m.speaking_share || []).map(p => `
+            <div class="share-row" title="${escapeHtml(p.name)}: ${p.count} ${escapeHtml(m.share_basis)} (${p.percent}%)">
+                <div class="share-name">${escapeHtml(p.name)}</div>
+                <div class="share-track"><div class="share-bar" style="width:${p.percent}%"></div></div>
+                <div class="share-value">${p.percent}% · ${p.count}</div>
+            </div>`).join('');
+
+        const actionRows = actions.map(a => `
+            <tr>
+                <td>${escapeHtml(a.task)}</td>
+                <td>${a.owner ? escapeHtml(a.owner) : '<span class="missing">Not specified</span>'}</td>
+                <td>${a.deadline ? escapeHtml(a.deadline) : '<span class="missing">Not specified</span>'}</td>
+                <td><span class="prio prio-${a.priority}">${a.priority}</span></td>
+            </tr>`).join('');
+
+        box.innerHTML = `
+            <div class="metrics-block">
+                <div class="metrics-title">Meeting Metrics</div>
+                <div class="kpi-grid">
+                    ${kpi(n, 'Action Items', `${m.priorities.high} high · ${m.priorities.medium} medium · ${m.priorities.low} low priority`)}
+                    ${kpi(pct(m.owner_rate), 'Owner Assigned', n ? `${withOwner} of ${n} tasks have a named owner` : 'No action items', m.owner_rate)}
+                    ${kpi(pct(m.deadline_rate), 'Deadline Set', n ? `${withDeadline} of ${n} tasks have a deadline` : 'No action items', m.deadline_rate)}
+                    ${kpi(pct(m.accountability_rate), 'Accountability Rate', 'Tasks with both an owner and a deadline', m.accountability_rate)}
+                    ${kpi(m.decisions, 'Decisions', 'Points the group agreed on')}
+                    ${kpi(m.open_questions, 'Open Questions', 'Points left unresolved')}
+                    ${kpi(pct(m.resolution_rate), 'Resolution Rate', 'Decisions ÷ (decisions + open questions)', m.resolution_rate)}
+                    ${kpi(m.risks, 'Risks / Blockers', `${m.words} words analyzed · ${m.participants} participants`)}
+                </div>
+            </div>
+            ${shareRows ? `
+            <div class="metrics-block">
+                <div class="metrics-title">Participation Share <span style="font-weight:400; text-transform:none; letter-spacing:0;">(by ${escapeHtml(m.share_basis)})</span></div>
+                ${shareRows}
+            </div>` : ''}
+            ${actionRows ? `
+            <div class="metrics-block">
+                <div class="metrics-title">Action Items</div>
+                <div class="actions-table-wrap">
+                    <table class="actions-table">
+                        <thead><tr><th>Task</th><th>Owner</th><th>Deadline</th><th>Priority</th></tr></thead>
+                        <tbody>${actionRows}</tbody>
+                    </table>
+                </div>
+            </div>` : ''}`;
+    }
+
+    function copyApprovedText() {
+        const approvedText = document.getElementById('aiOutputReview').innerText;
+        const copyBtn = document.getElementById('copyBtn');
+
+        navigator.clipboard.writeText(approvedText).then(() => {
+            copyBtn.innerText = "Approved Draft Copied!";
+            copyBtn.style.background = "#2ed573";
+            setTimeout(() => {
+                copyBtn.innerText = "Copy Approved Intelligence";
+                copyBtn.style.background = "#0f172a";
+            }, 2500);
+        });
+    }
+
+    // Variable globale pour conserver le fil de la discussion avec Llama 3
+let chatHistory = [];
+
+// Fonction pour ouvrir/fermer la fenêtre de chat
+function toggleChat() {
+    const chatWindow = document.getElementById('chatWindow');
+    const chatBubble = document.getElementById('chatBubble');
+    
+    if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
+        chatWindow.style.display = 'flex';
+        chatBubble.style.transform = 'scale(0.9)';
+    } else {
+        chatWindow.style.display = 'none';
+        chatBubble.style.transform = 'scale(1)';
+    }
+}
+
+const bubbleStyles = {
+    user: "align-self: flex-end; background: var(--brand-red); color: white; border-radius: 12px 12px 0px 12px;",
+    bot: "align-self: flex-start; background: #e2e8f0; color: #1e293b; border-radius: 12px 12px 12px 0px;",
+    loading: "align-self: flex-start; background: #e2e8f0; color: #64748b; border-radius: 12px 12px 12px 0px; font-style: italic;",
+    error: "align-self: flex-start; background: #fee2e2; color: #991b1b; border-radius: 12px 12px 12px 0px;"
+};
+
+// Ajoute une bulle de chat (textContent : le texte n'est jamais interprété comme du HTML)
+function addChatBubble(text, kind) {
+    const chatBox = document.getElementById('chatBox');
+    const bubble = document.createElement('div');
+    bubble.style.cssText = bubbleStyles[kind] + " padding: 10px 14px; max-width: 80%; font-size: 14px; line-height: 1.4; white-space: pre-wrap;";
+    if (kind === 'bot') {
+        // Escape first, then show the AI's **bold** markers as real bold text
+        bubble.innerHTML = escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    } else {
+        bubble.textContent = text;
+    }
+    chatBox.appendChild(bubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return bubble;
+}
+
+// Fonction principale pour envoyer le message
+function sendChatMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const chatBox = document.getElementById('chatBox');
+    const text = chatInput.value.trim();
+
+    if (!text) return;
+
+    // 1. Afficher le message de l'utilisateur à l'écran
+    addChatBubble(text, 'user');
+    
+    // Vider le champ de saisie et scroller vers le bas
+    chatInput.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // 2. Enregistrer le message dans l'historique local pour le modèle
+    chatHistory.push({ role: "user", content: text });
+
+    // 3. Afficher un indicateur visuel de chargement temporaire
+    const loadingElement = addChatBubble('Llama 3 is thinking...', 'loading');
+
+    // 4. Envoyer la requête HTTP POST à FastAPI
+    fetch(`${API_BASE}/chat-assistant`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: chatHistory })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Server network error.");
+        return response.json();
+    })
+    .then(data => {
+        // Supprimer l'indicateur de chargement
+        loadingElement.remove();
+
+        if (data.success || data.reply) {
+            const botReply = data.reply;
+
+            // 5. Afficher la réponse du bot à l'écran
+            addChatBubble(botReply, 'bot');
+            
+            // Mémoriser la réponse du bot dans l'historique pour maintenir le contexte
+            chatHistory.push({ role: "assistant", content: botReply });
+        } else {
+            chatHistory.pop(); // the failed question is not kept in the conversation
+            addChatBubble('Processing error: ' + (data.error || 'Unknown'), 'error');
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(err => {
+        loadingElement.remove();
+        chatHistory.pop();
+        addChatBubble('Cannot reach the local chat server. Make sure app.py is running on port 8001.', 'error');
+        console.error(err);
+    });
+}
+</script>
+
+
+
+<div id="chatBubble" onclick="toggleChat()" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background-color: var(--brand-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(230,0,18,0.3); cursor: pointer; z-index: 999; transition: transform 0.2s;">
+    <span style="color: white; font-size: 28px;">💬</span>
+</div>
+
+<div id="chatWindow" style="display: none; position: fixed; bottom: 105px; right: 30px; width: 380px; height: 500px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; flex-direction: column; z-index: 999; overflow: hidden;">
+    
+    <div style="background: #0f172a; padding: 16px; color: white; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 10px; height: 10px; background: #2ed573; border-radius: 50%;"></div>
+            <strong style="font-size: 15px;">AI Partnership Assistant</strong>
+        </div>
+        <span onclick="toggleChat()" style="cursor: pointer; font-size: 18px; opacity: 0.7;">✕</span>
+    </div>
+
+    <div id="chatBox" style="flex: 1; padding: 16px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 12px;">
+        <div style="align-self: flex-start; background: #e2e8f0; color: #1e293b; padding: 10px 14px; border-radius: 12px 12px 12px 0px; max-width: 80%; font-size: 14px; line-height: 1.4;">
+            Hello! I am your local AI assistant. How can I help you manage your partnerships today?
+        </div>
+    </div>
+
+    <div style="padding: 12px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; background: white;">
+        <input type="text" id="chatInput" placeholder="Ask Llama 3 a question..." style="flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; outline: none;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+        <button onclick="sendChatMessage()" style="background: var(--brand-red); color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">Send</button>
+    </div>
+</div>
+
+</body>
+</html>

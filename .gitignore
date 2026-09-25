@@ -13,3 +13,5 @@ __pycache__/
 # Fichiers système ou éditeur
 .vscode/
 .DS_Store
+# Keep the Meeting Assistant Live Server port setting (5501)
+!meeting-assistant/.vscode/
