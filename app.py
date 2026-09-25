@@ -44,7 +44,9 @@ async def stream_match(query: str):
                 "match_count": MATCH_COUNT
             }).execute())
             
-            matches = result.data or []
+            # Only real partner data is sent to the browser (older rows may still hold demo metric columns)
+            real_fields = ("id", "company_name", "industry", "objectives", "similarity")
+            matches = [{k: m.get(k) for k in real_fields} for m in (result.data or [])]
             
             # --- LIGNE DE DÉBOGAGE : Regardez votre terminal VS Code pour voir la structure ---
             print("DONNÉES SUPABASE REÇUES :", matches)

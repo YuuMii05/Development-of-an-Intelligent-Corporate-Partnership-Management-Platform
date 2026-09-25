@@ -150,6 +150,9 @@ ollama pull llama3
    ```
 
 4. **Initialisation de la base (une seule fois)**
+   Dans le tableau de bord Supabase, ouvrez **SQL Editor**, collez le contenu de
+   [`supabase_setup.sql`](supabase_setup.sql) et exécutez-le (extension `pgvector`, table
+   `partner_profiles` et fonction `match_partners`). Puis remplissez la table :
    ```bash
    python seed_partners.py   # 7 partenaires de base
    python add_partners.py    # + 12 partenaires Huawei Tunisie (19 au total)
