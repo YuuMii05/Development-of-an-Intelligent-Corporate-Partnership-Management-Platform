@@ -73,7 +73,7 @@ de texte par IA, entièrement exécutée en local via Ollama.
 ┌──────────────┐    requête client       ┌─────────────────────┐
 │  index.html  │ ──────────────────────► │   FastAPI (app.py)  │
 │  (interface) │ ◄───── streaming ────── │                     │
-└──────────────┘   (SSE temps réel)      └──────────┬──────────┘
+└──────────────┘     (SSE temps réel)    └──────────┬──────────┘
                                                     │
                        ┌────────────────────────────┼───────────────────────┐
                        ▼                            ▼                       ▼
@@ -82,8 +82,8 @@ de texte par IA, entièrement exécutée en local via Ollama.
               │ nomic-embed-text│         │  (PostgreSQL +     │   │     llama3       │
               │  → vecteur 768  │         │   pgvector)        │   │ → texte généré   │
               └─────────────────┘         │  fonction RPC      │   └──────────────────┘
-                 (embeddings)             │  match_partners    │     (diagnostics +
-                                          └────────────────────┘      propositions)
+                 (embeddings)             │  match_partners    │      (diagnostics +
+                                          └────────────────────┘       propositions)
 ```
 
 **Étapes d'une recherche**
