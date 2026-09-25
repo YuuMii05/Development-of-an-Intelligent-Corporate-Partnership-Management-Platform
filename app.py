@@ -1,7 +1,6 @@
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 from supabase import create_client, Client
 from sse_starlette.sse import EventSourceResponse
 import ollama
@@ -14,8 +13,10 @@ load_dotenv()
 
 app = FastAPI(title="AI Partner Matching Engine")
 
-# Montage propre des fichiers statiques
-app.mount("/static", StaticFiles(directory="."), name="static")
+# Only the static/ folder is public (never the project root, which holds .env)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+ollama_client = ollama.AsyncClient()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY") or os.getenv("SUPABASE_KEY")
@@ -23,11 +24,8 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("Missing SUPABASE_URL / SUPABASE_SERVICE_KEY in .env")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-class SearchRequest(BaseModel):
-    query: str
-
-def get_local_embedding(text: str):
-    response = ollama.embeddings(model="nomic-embed-text", prompt=text)
+async def get_local_embedding(text: str):
+    response = await ollama_client.embeddings(model="nomic-embed-text", prompt=text)
     return response["embedding"]
 
 @app.get("/stream-match")
@@ -38,13 +36,13 @@ async def stream_match(query: str):
             MATCH_COUNT = 3
 
             # 1. Génération du vecteur et recherche par similarité dans Supabase
-            query_vector = get_local_embedding(query)
-            
-            result = supabase.rpc("match_partners", {
+            query_vector = await get_local_embedding(query)
+
+            result = await asyncio.to_thread(lambda: supabase.rpc("match_partners", {
                 "query_embedding": query_vector,
                 "match_threshold": MATCH_THRESHOLD,
                 "match_count": MATCH_COUNT
-            }).execute()
+            }).execute())
             
             matches = result.data or []
             
@@ -57,46 +55,40 @@ async def stream_match(query: str):
                 "data": json.dumps({"matches": matches})
             }
             
-            # 3. Génération des diagnostics de santé par l'IA en streaming
+            # 3. Génération des diagnostics d'alignement par l'IA en streaming (uniquement à partir de données réelles)
             for idx, partner in enumerate(matches):
-                # Correction : On s'assure de lire les clés exactes de Supabase (cf. image_23defc.png)
-                health = partner.get("health_score", 99) 
-                risk = partner.get("risk_level", "Unknown")
-                trend = partner.get("engagement_trend", "Unknown")
-                value = partner.get("future_value_estimate", "Unknown")
-                objectives = partner.get("objectives", partner.get("industry", "")) # fallback sur industry si vide
+                industry = partner.get("industry") or "Unknown"
+                objectives = partner.get("objectives") or industry
+                similarity = partner.get("similarity")
+                match_pct = f"{round(similarity * 100)}%" if similarity is not None else "unknown"
 
-                # On force l'IA à utiliser STRICTEMENT ces valeurs de Supabase sans traduire en Français
                 prompt_strategique = f"""
         You are an enterprise strategy expert for Huawei.
         Analyze the strategic alignment between the partner '{partner.get('company_name', 'Unknown')}' and the customer requirement: '{query}'.
-        
-        CRITICAL REAL-TIME PARTNER METRICS (You MUST explicitly mention these exact values):
-        - Partnership Health Score: {health}/100
-        - Risk Level: {risk}
-        - Engagement Trend: {trend}
-        - Future Value Estimate: {value}
+
+        PARTNER PROFILE (the only facts you may use):
+        - Industry: {industry}
         - Core Capabilities: {objectives}
-        
-        Write a brief, high-impact alignment diagnostic (exactly 3-4 sentences).
-        CRITICAL REGULATION: WRITE EXCLUSIVELY IN ENGLISH. Do not translate trends or risk levels. Keep the exact terms provided above. Do not make an introduction, start speaking directly.
+        - Semantic match with the requirement: {match_pct}
+
+        Write a brief, high-impact alignment diagnostic (exactly 3-4 sentences) explaining which of the partner's capabilities fit the requirement and any capability gaps.
+        STRICT RULES: Write exclusively in English. Use only the facts listed above. Do NOT invent any figures, scores, revenue, risk levels or trends. Do not make an introduction, start speaking directly.
         """
-                
-                response_stream = ollama.generate(
+
+                response_stream = await ollama_client.generate(
                     model="llama3",
                     prompt=prompt_strategique,
                     options={"temperature": 0.2}, # Température baissée pour éviter que l'IA hallucine ou invente des chiffres
                     stream=True
                 )
-                
-                for chunk in response_stream:
+
+                async for chunk in response_stream:
                     text_chunk = chunk.get("response", "")
                     if text_chunk:
                         yield {
                             "event": "ai_chunk",
                             "data": json.dumps({"partner_index": idx, "text": text_chunk})
                         }
-                        await asyncio.sleep(0.01)
             
             yield {"event": "done", "data": "finished"}
         except Exception as e:
@@ -129,7 +121,8 @@ async def generate_proposal(request: Request):
     3. Professional Next-Steps Conclusion
     
     ⚠️ YOU MUST WRITE EXCLUSIVELY IN ENGLISH. Do not include any French text. Specify clearly that this is an official infrastructure deployment initiative.
+    Do not invent any figures, prices, dates, statistics or scores.
     """
     
-    response = ollama.generate(model="llama3", prompt=prompt)
+    response = await ollama_client.generate(model="llama3", prompt=prompt)
     return {"proposal": response["response"]}

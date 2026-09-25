@@ -53,12 +53,12 @@ données ») et la compare mathématiquement aux capacités réelles de chaque p
 
 Pour chaque partenaire identifié, l'application :
 1. **Calcule un score de similarité** entre le besoin et le profil du partenaire ;
-2. **Affiche des indicateurs stratégiques** : santé du partenariat, niveau de risque, tendance d'engagement, valeur future estimée ;
-3. **Génère un diagnostic d'alignement** rédigé par une IA, en streaming, mot par mot ;
+2. **Affiche le profil réel du partenaire** : secteur d'activité et capacités certifiées Huawei ;
+3. **Génère un diagnostic d'alignement** rédigé par une IA, en streaming, mot par mot, basé uniquement sur le profil réel du partenaire (aucun chiffre inventé) ;
 4. **Produit automatiquement une proposition commerciale B2B** formelle prête à l'envoi.
 
 Un bouton **Meeting Assistant** dans la barre de navigation permet également d'ouvrir
-l'application compagnon *AI Meeting Assistant* (projet séparé, servi sur le port `8001`).
+l'application compagnon *AI Meeting Assistant* (projet séparé, ouvert via Live Server sur le port `5501`, son API tourne sur le port `8001`).
 
 ---
 
@@ -104,10 +104,6 @@ et leur représentation sémantique (`vector(768)`), permettant une recherche pa
 | `industry`               | `text`        | Secteur d'activité                       |
 | `objectives`             | `text`        | Capacités et spécialisations             |
 | `embedding`              | `vector(768)` | Vecteur sémantique généré par l'IA       |
-| `health_score`           | `integer`     | Score de santé du partenariat (0–100)    |
-| `risk_level`             | `text`        | Niveau de risque (Low / Medium / High)   |
-| `engagement_trend`       | `text`        | Tendance d'engagement                    |
-| `future_value_estimate`  | `text`        | Valeur future estimée                    |
 
 **Stack technique**
 | Couche              | Technologie                                             |
@@ -158,9 +154,9 @@ ollama pull llama3
    python seed_partners.py   # 7 partenaires de base
    python add_partners.py    # + 12 partenaires Huawei Tunisie (19 au total)
    ```
-   `seed_partners.py` vide la table, génère un embedding pour chaque partenaire via Ollama, puis
-   insère les profils dans Supabase. `add_partners.py` complète la base en ignorant automatiquement
-   les doublons déjà présents.
+   `seed_partners.py` génère un embedding pour chaque partenaire via Ollama, puis
+   insère les profils dans Supabase. Les deux scripts ignorent automatiquement les doublons déjà
+   présents (aucune suppression de données).
 
 5. **Lancement de l'application**
    ```bash
@@ -209,7 +205,7 @@ partner-backend/
 ├── add_partners.py     # Ajoute 12 partenaires Huawei Tunisie supplémentaires (sans doublons)
 ├── index.html          # Interface utilisateur complète
 ├── .env                # Variables secrètes (non inclut sur Git)
-├── logo.jpg / lp1.jpg  # Ressources visuelles
+├── static/            # Ressources visuelles publiques (logo.jpg, lp1.jpg)
 └── requirements.txt    # Dépendances Python
 ```
 

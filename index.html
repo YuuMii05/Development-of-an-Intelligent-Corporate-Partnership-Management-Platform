@@ -697,7 +697,7 @@
             <span id="logo-fallback" style="display:none;">HUAWEI</span>
         </a>
         <button class="navbar-region-btn" onclick="toggleTunisiaModal()">Partners list</button>
-        <a class="navbar-region-btn" href="http://127.0.0.1:8001/" target="_blank" rel="noopener" style="margin-left:12px; text-decoration:none;">Meeting Assistant</a>
+        <a class="navbar-region-btn" href="http://127.0.0.1:5501/" target="_blank" rel="noopener" style="margin-left:12px; text-decoration:none;">Meeting Assistant</a>
     </div>
 
     <div class="container">
@@ -1607,6 +1607,12 @@
     const suggestionsPanel = document.getElementById('suggestionsPanel');
     const resultsContainer = document.getElementById('results'); // Votre conteneur principal
     let eventSource = null;
+    let currentMatchNames = [];
+
+    // Escape text from the database / AI before inserting it as HTML
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
 
     queryInput.addEventListener('focus', () => {
         suggestionsPanel.classList.add('visible');
@@ -1667,88 +1673,66 @@
         function useLocalFallbackSearch(q) {
             const cleanQ = q.toLowerCase().trim();
             const localRealPartners = [
-                { name: 'Tunisie Micro Informatique (TMI)', industry: 'Enterprise IT & Solutions Architecture', badge: 'Diamond Reseller', capabilities: 'Data Communication Master, Storage Master, Enterprise Services & Software Master', address: "8 Rue Socrate, Le Kram, Tunis", phone: "+216 71 860 666", health_score: 94, risk_level: 'Low', engagement_trend: 'En Hausse 📈', future_value_estimate: '€500K+' },
-                { name: 'Prologic Tunisie', industry: 'Enterprise IT & System Integration', badge: 'Gold Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Optical Basic', address: '19 Rue Félicien Challet, Tunis', phone: '+216 25 414 3232', health_score: 78, risk_level: 'Medium', engagement_trend: 'Stable ➡️', future_value_estimate: '€250K' },
-                { name: 'STE Autonomous Systems Engineering', industry: 'Systems Engineering & Automation', badge: 'Gold Reseller', capabilities: 'Data Communication Basic, Optical Advanced, Enterprise Services & Software Basic', address: 'Manar 1, Tunis', phone: '+216 71 703 733', health_score: 42, risk_level: 'High', engagement_trend: 'En Baisse 📉', future_value_estimate: '€50K' },
-                { name: 'ACT', industry: 'Advanced Computer Technologies', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '19 Rue Félicien Challaye, Tunis', phone: '+216 70 022 960', health_score: 88, risk_level: 'Low', engagement_trend: 'Stable ➡️', future_value_estimate: '€120K' },
-                { name: 'ADACTIM', industry: 'Managed Services & Cloud Integration', badge: 'Authorized Reseller', capabilities: 'Authorized Solution Integrator', address: 'Chotrana 2, Ariana', phone: '+216 31 340 033', health_score: 61, risk_level: 'Medium', engagement_trend: 'En Baisse 📉', future_value_estimate: '€180K' },
-                { name: 'BITS', industry: 'Business Information Technology Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Enterprise Services & Software Basic', address: '10 Rue AL Akhtal, Tunis', phone: '+216 70 248 220', health_score: 91, risk_level: 'Low', engagement_trend: 'En Hausse 📈', future_value_estimate: '€300K' },
-                { name: 'BLUE IT', industry: 'Enterprise Architecture & Provisioning', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '67 Avenue Alain Savary, Tunis', phone: '+216 92 211 600', health_score: 83, risk_level: 'Low', engagement_trend: 'Stable ➡️', future_value_estimate: '€95K' },
-                { name: 'Smart Tunisia', industry: 'IT Distribution & Collaboration', badge: 'Gold Distribution Partner', capabilities: 'Data Communication Basic, Intelligent Collaboration Basic', address: 'Z.I. La Charguia I, Tunis', phone: '+216 71 115 600', health_score: 90, risk_level: 'Low', engagement_trend: 'En Hausse 📈', future_value_estimate: '€350K' },
-                { name: 'Computer Distribution S.A', industry: 'IT Distribution & System Integration', badge: 'Gold Distribution Partner', capabilities: 'Data Communication Basic, Storage Basic, Enterprise Services & Software Basic', address: '16 Rue du 8612, Charguia 1, Tunis', phone: '+216 56 836 698', health_score: 87, risk_level: 'Low', engagement_trend: 'En Hausse 📈', future_value_estimate: '€280K' },
-                { name: 'EASYTEK', industry: 'IT Solutions & Reselling', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Reselling', address: '80 Avenue Mouaouia Ibn Abi Sofian, El Menzah 7, Tunis', phone: '+216 70 813 287', health_score: 66, risk_level: 'Medium', engagement_trend: 'Stable ➡️', future_value_estimate: '€90K' },
-                { name: 'HES Tunisie', industry: 'Enterprise Hardware & Services', badge: 'Authorized Reseller', capabilities: 'Enterprise Infrastructure & Services', address: 'Les Berges du Lac, 1053 Tunis', phone: '+216 22 129 930', health_score: 72, risk_level: 'Low', engagement_trend: 'Stable ➡️', future_value_estimate: '€110K' },
-                { name: 'Network Associates', industry: 'Networking & Infrastructure', badge: 'Authorized Reseller', capabilities: 'Networking & Enterprise Infrastructure', address: 'Rue du Lac Constance, Tunis', phone: '+216 98 700 126', health_score: 58, risk_level: 'Medium', engagement_trend: 'En Baisse 📉', future_value_estimate: '€70K' },
-                { name: 'OPENYX', industry: 'Data Communication Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Basic', address: 'El Manzah 9, Ariana', phone: '+216 98 261 065', health_score: 69, risk_level: 'Medium', engagement_trend: 'Stable ➡️', future_value_estimate: '€85K' },
-                { name: 'SIMOP Tunisie', industry: 'ICT Training & Integration', badge: 'Authorized Reseller', capabilities: 'Certified Huawei Authorized Learning Partner, Enterprise Integration', address: 'Z.I. Charguia 1, 2035 Tunis', phone: '+216 71 115 753', health_score: 84, risk_level: 'Low', engagement_trend: 'En Hausse 📈', future_value_estimate: '€200K' },
-                { name: 'STE Standard Sharing Software (3S)', industry: 'Software & Storage Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Basic, Storage Advanced, Enterprise Services & Software Basic', address: 'Monplaisir, Tunis', phone: '+216 71 111 100', health_score: 80, risk_level: 'Low', engagement_trend: 'En Hausse 📈', future_value_estimate: '€160K' },
-                { name: 'TELCOTEC Integration', industry: 'Telecom & Systems Integration', badge: 'Authorized Reseller', capabilities: 'Telecom & Systems Integration', address: 'MBA Informatique, Tunis', phone: '+216 92 359 384', health_score: 63, risk_level: 'Medium', engagement_trend: 'Stable ➡️', future_value_estimate: '€75K' },
-                { name: 'Tunisys', industry: 'Enterprise IT Services', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Services', address: '124 Avenue de la Liberté, 1002 Tunis', phone: '+216 89 686 378', health_score: 76, risk_level: 'Low', engagement_trend: 'Stable ➡️', future_value_estimate: '€130K' },
-                { name: 'Waycon', industry: 'IT Infrastructure & Consulting', badge: 'Authorized Reseller', capabilities: 'IT Infrastructure & Consulting', address: 'Charguia II, Tunis', phone: '+216 71 941 231', health_score: 55, risk_level: 'Medium', engagement_trend: 'En Baisse 📉', future_value_estimate: '€60K' },
-                { name: 'Carthage', industry: 'IT Solutions & Reselling', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Reselling', address: 'Borj Cedria, Ben Arous', phone: '+216 71 749 100', health_score: 68, risk_level: 'Medium', engagement_trend: 'Stable ➡️', future_value_estimate: '€80K' }
+                { name: 'Tunisie Micro Informatique (TMI)', industry: 'Enterprise IT & Solutions Architecture', badge: 'Diamond Reseller', capabilities: 'Data Communication Master, Storage Master, Enterprise Services & Software Master', address: "8 Rue Socrate, Le Kram, Tunis", phone: "+216 71 860 666" },
+                { name: 'Prologic Tunisie', industry: 'Enterprise IT & System Integration', badge: 'Gold Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Optical Basic', address: '19 Rue Félicien Challet, Tunis', phone: '+216 25 414 3232' },
+                { name: 'STE Autonomous Systems Engineering', industry: 'Systems Engineering & Automation', badge: 'Gold Reseller', capabilities: 'Data Communication Basic, Optical Advanced, Enterprise Services & Software Basic', address: 'Manar 1, Tunis', phone: '+216 71 703 733' },
+                { name: 'ACT', industry: 'Advanced Computer Technologies', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '19 Rue Félicien Challaye, Tunis', phone: '+216 70 022 960' },
+                { name: 'ADACTIM', industry: 'Managed Services & Cloud Integration', badge: 'Authorized Reseller', capabilities: 'Authorized Solution Integrator', address: 'Chotrana 2, Ariana', phone: '+216 31 340 033' },
+                { name: 'BITS', industry: 'Business Information Technology Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Advanced, Storage Advanced, Enterprise Services & Software Basic', address: '10 Rue AL Akhtal, Tunis', phone: '+216 70 248 220' },
+                { name: 'BLUE IT', industry: 'Enterprise Architecture & Provisioning', badge: 'Authorized Reseller', capabilities: 'Authorized Infrastructure Node', address: '67 Avenue Alain Savary, Tunis', phone: '+216 92 211 600' },
+                { name: 'Smart Tunisia', industry: 'IT Distribution & Collaboration', badge: 'Gold Distribution Partner', capabilities: 'Data Communication Basic, Intelligent Collaboration Basic', address: 'Z.I. La Charguia I, Tunis', phone: '+216 71 115 600' },
+                { name: 'Computer Distribution S.A', industry: 'IT Distribution & System Integration', badge: 'Gold Distribution Partner', capabilities: 'Data Communication Basic, Storage Basic, Enterprise Services & Software Basic', address: '16 Rue du 8612, Charguia 1, Tunis', phone: '+216 56 836 698' },
+                { name: 'EASYTEK', industry: 'IT Solutions & Reselling', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Reselling', address: '80 Avenue Mouaouia Ibn Abi Sofian, El Menzah 7, Tunis', phone: '+216 70 813 287' },
+                { name: 'HES Tunisie', industry: 'Enterprise Hardware & Services', badge: 'Authorized Reseller', capabilities: 'Enterprise Infrastructure & Services', address: 'Les Berges du Lac, 1053 Tunis', phone: '+216 22 129 930' },
+                { name: 'Network Associates', industry: 'Networking & Infrastructure', badge: 'Authorized Reseller', capabilities: 'Networking & Enterprise Infrastructure', address: 'Rue du Lac Constance, Tunis', phone: '+216 98 700 126' },
+                { name: 'OPENYX', industry: 'Data Communication Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Basic', address: 'El Manzah 9, Ariana', phone: '+216 98 261 065' },
+                { name: 'SIMOP Tunisie', industry: 'ICT Training & Integration', badge: 'Authorized Reseller', capabilities: 'Certified Huawei Authorized Learning Partner, Enterprise Integration', address: 'Z.I. Charguia 1, 2035 Tunis', phone: '+216 71 115 753' },
+                { name: 'STE Standard Sharing Software (3S)', industry: 'Software & Storage Solutions', badge: 'Authorized Reseller', capabilities: 'Data Communication Basic, Storage Advanced, Enterprise Services & Software Basic', address: 'Monplaisir, Tunis', phone: '+216 71 111 100' },
+                { name: 'TELCOTEC Integration', industry: 'Telecom & Systems Integration', badge: 'Authorized Reseller', capabilities: 'Telecom & Systems Integration', address: 'MBA Informatique, Tunis', phone: '+216 92 359 384' },
+                { name: 'Tunisys', industry: 'Enterprise IT Services', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Services', address: '124 Avenue de la Liberté, 1002 Tunis', phone: '+216 89 686 378' },
+                { name: 'Waycon', industry: 'IT Infrastructure & Consulting', badge: 'Authorized Reseller', capabilities: 'IT Infrastructure & Consulting', address: 'Charguia II, Tunis', phone: '+216 71 941 231' },
+                { name: 'Carthage', industry: 'IT Solutions & Reselling', badge: 'Authorized Reseller', capabilities: 'Enterprise IT Reselling', address: 'Borj Cedria, Ben Arous', phone: '+216 71 749 100' }
             ];
 
-            const matches = localRealPartners.filter(p => 
-                p.name.toLowerCase().includes(cleanQ) || 
-                p.industry.toLowerCase().includes(cleanQ) || 
-                p.capabilities.toLowerCase().includes(cleanQ) ||
-                cleanQ.includes("integration") || cleanQ.includes("communication") || cleanQ.includes("data")
-            );
-            
+            // Keyword match: a partner is shown only if a word of the query appears in its profile
+            const keywords = cleanQ.split(/[^a-z0-9]+/).filter(w => w.length >= 4);
+            const matches = localRealPartners.filter(p => {
+                const profile = `${p.name} ${p.industry} ${p.capabilities}`.toLowerCase();
+                return keywords.some(w => profile.includes(w));
+            });
+
             if (matches.length === 0) {
                 resultsContainer.innerHTML = `
                     <div style="text-align:center; padding: 40px 20px; border-radius:16px; border: 1px dashed var(--brand-red); background: rgba(230,0,18,0.02); max-width:750px; margin:0 auto;">
                         <p style="color:var(--brand-red); font-weight:700; font-size:15px; text-transform:uppercase; margin-bottom:4px;">No Verified Partners Aligned</p>
-                        <p style="color:var(--text-muted); font-size:13px; margin:0;">The request did not pass the semantic baseline matrix constraint rule.</p>
+                        <p style="color:var(--text-muted); font-size:13px; margin:0;">No partner profile matches the keywords of this request.</p>
                     </div>
                 `;
                 return;
             }
 
             resultsContainer.innerHTML = "";
+            currentMatchNames = matches.map(p => p.name);
             matches.forEach((partner, index) => {
-                let riskColor = "#2ed573";
-                if (partner.risk_level === "Medium") riskColor = "#ffa502";
-                if (partner.risk_level === "High") riskColor = "#ff4757";
-
                 resultsContainer.innerHTML += `
                     <div class="card" style="max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <div style="font-size: 20px; font-weight: 700; color: #1a202c;">${partner.name}</div>
-                            <div style="background: #e60012; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;">Match : 95%</div>
+                            <div style="background: #e60012; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;">Keyword match</div>
                         </div>
                         <div style="color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 14px;">${partner.badge} &bull; ${partner.industry}</div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #edf2f7;">
-                            <div style="text-align: center; border-right: 1px solid #e2e8f0;">
-                                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Health Score</div>
-                                <div style="font-size: 22px; font-weight: 800; color: #2d3748;">${partner.health_score}/100</div>
-                            </div>
-                            <div style="text-align: center; border-right: 1px solid #e2e8f0;">
-                                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Risk Level</div>
-                                <div style="font-size: 16px; font-weight: 700; color: ${riskColor}; margin-top: 4px;">${partner.risk_level}</div>
-                            </div>
-                            <div style="text-align: center; border-right: 1px solid #e2e8f0;">
-                                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Trend</div>
-                                <div style="font-size: 15px; font-weight: 700; color: #2d3748; margin-top: 5px;">${partner.engagement_trend}</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Future Value</div>
-                                <div style="font-size: 14px; font-weight: 700; color: #4a5568; margin-top: 6px;">${partner.future_value_estimate}</div>
-                            </div>
-                        </div>
 
                         <div style="font-size: 14px; color: #4a5568; line-height: 1.6; margin-bottom: 16px;">
                             <strong>Ecosystem Capabilities:</strong> ${partner.capabilities}.<br>
                             <span style="font-size: 13px; color: var(--text-muted);">${partner.address}</span>
                         </div>
                         <div style="background: #fff5f5; padding: 16px; border-radius: 8px; border-left: 4px solid #e60012; margin-bottom: 15px;">
-                            <div style="font-weight: 700; font-size: 13px; color: #e60012; margin-bottom: 4px; text-transform: uppercase;">AI Diagnostic & Risk Management</div>
-                            <span class="streaming-text done">“ Architecture validation verification established at verified network node path: ${partner.phone}. ”</span>
+                            <div style="font-weight: 700; font-size: 13px; color: #e60012; margin-bottom: 4px; text-transform: uppercase;">AI Alignment Analysis</div>
+                            <span class="streaming-text done">Offline result: the live AI diagnostic is unavailable. Contact: ${partner.phone}</span>
                         </div>
 
                         <div style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 15px;">
-                            <button onclick="buildContract('${partner.name.replace(/'/g, "\\'")}', ${index})" class="btn-proposal" style="background: #e60012; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">
+                            <button onclick="buildContract(currentMatchNames[${index}], ${index})" class="btn-proposal" style="background: #e60012; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">
                                  Generate Partnership Proposal
                             </button>
                             <div id="proposal-box-${index}" style="margin-top: 12px; font-size: 13px; color: #2d3748; background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #cbd5e0; display: none; white-space: pre-line; line-height: 1.6;">
@@ -1763,7 +1747,7 @@
         // Connexion au flux SSE du backend live pipeline
         eventSource = new EventSource(`/stream-match?query=${encodeURIComponent(queryText)}`);
         
-// 1. Écouter la réception de la liste des partenaires et des indicateurs de santé
+// 1. Écouter la réception de la liste des partenaires correspondants
 eventSource.addEventListener('initial_matches', (event) => {
     const data = JSON.parse(event.data);
     if (!data.matches || data.matches.length === 0) {
@@ -1773,73 +1757,42 @@ eventSource.addEventListener('initial_matches', (event) => {
     }
     
     resultsContainer.innerHTML = "";
+    currentMatchNames = data.matches.map(p => p.company_name);
     data.matches.forEach((partner, index) => {
         
-        // === CORRECTION 1: Extraction propre et sécurisée des données de Supabase ===
-        const healthScore = partner.health_score; 
-        const riskLevel = partner.risk_level || 'Unknown';
-        const trend = partner.engagement_trend || 'Unknown';
-        const futureValue = partner.future_value_estimate || 'Unknown';
-
-        // === CORRECTION 2: Gestion robuste des couleurs de risques (insensible à la casse) ===
-        let riskColor = "#2ed573"; // Vert par défaut (Low Risk)
-        const checkRisk = riskLevel.trim().toLowerCase();
-        if (checkRisk === "medium") riskColor = "#ffa502"; // Orange
-        if (checkRisk === "high") riskColor = "#ff4757"; // Rouge
-        // ===========================================================================
-
         const matchScore = Math.round(partner.similarity * 100);
 
         resultsContainer.innerHTML += `
             <div class="card" style="max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <div style="font-size: 20px; font-weight: 700; color: #1a202c;">${partner.company_name}</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #1a202c;">${escapeHtml(partner.company_name)}</div>
                     <div style="background: #e60012; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;">
                         Match : ${matchScore}%
                     </div>
                 </div>
                 
                 <div style="color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 14px;">
-                    ${partner.industry || 'N/A'}
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #edf2f7;">
-                    <div style="text-align: center; border-right: 1px solid #e2e8f0;">
-                        <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Score Santé</div>
-                        <div style="font-size: 22px; font-weight: 800; color: #2d3748;">${healthScore !== undefined ? healthScore : 'N/A'}<span style="font-size: 12px; color: #718096;">/100</span></div>
-                    </div>
-                    <div style="text-align: center; border-right: 1px solid #e2e8f0;">
-                        <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Niveau Risque</div>
-                        <div style="font-size: 16px; font-weight: 700; color: ${riskColor}; margin-top: 4px;">${riskLevel}</div>
-                    </div>
-                    <div style="text-align: center; border-right: 1px solid #e2e8f0;">
-                        <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Tendance</div>
-                        <div style="font-size: 15px; font-weight: 700; color: #2d3748; margin-top: 5px;">${trend}</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 11px; color: #a0aec0; font-weight: 600; text-transform: uppercase;">Valeur Future</div>
-                        <div style="font-size: 14px; font-weight: 700; color: #4a5568; margin-top: 6px;">${futureValue}</div>
-                    </div>
+                    ${escapeHtml(partner.industry || 'N/A')}
                 </div>
 
                 <div style="font-size: 14px; color: #4a5568; line-height: 1.6; margin-bottom: 16px;">
-                    <strong>Capacités de l'écosystème :</strong> ${partner.objectives || 'Aucune capacité listée'}
+                    <strong>Ecosystem Capabilities:</strong> ${escapeHtml(partner.objectives || 'No capabilities listed')}
                 </div>
 
                 <div style="background: #fff5f5; padding: 16px; border-radius: 8px; border-left: 4px solid #e60012; margin-bottom: 15px;">
                     <div style="font-weight: 700; font-size: 13px; color: #e60012; margin-bottom: 4px; text-transform: uppercase;">
-                        Diagnostic IA & Gestion des Risques
+                        AI Alignment Analysis
                     </div>
-                    <span id="ai-text-${index}" class="streaming-text" style="font-size: 14px; color: #2d3748; line-height: 1.5;">Analyse en cours des matrices sémantiques...</span>
+                    <span id="ai-text-${index}" class="streaming-text" style="font-size: 14px; color: #2d3748; line-height: 1.5;">Analyzing semantic alignment...</span>
                 </div>
 
                 <div style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 15px;">
-                    <button onclick="buildContract('${partner.company_name.replace(/'/g, "\\'")}', ${index})" class="btn-proposal" style="background: #e60012; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">
-                        Générer la proposition commerciale
+                    <button onclick="buildContract(currentMatchNames[${index}], ${index})" class="btn-proposal" style="background: #e60012; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">
+                        Generate Partnership Proposal
                     </button>
                     <div id="proposal-box-${index}" style="margin-top: 12px; font-size: 13px; color: #2d3748; background: #f7fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #cbd5e0; display: none; white-space: pre-line; line-height: 1.6;">
-                        Génération du document officiel en cours...
+                        Generating official document...
                     </div>
                 </div>
             </div>
@@ -1852,7 +1805,7 @@ eventSource.addEventListener('initial_matches', (event) => {
             const chunkData = JSON.parse(event.data);
             const textTarget = document.getElementById(`ai-text-${chunkData.partner_index}`);
             if (textTarget) {
-                if (textTarget.innerText === "Analyse en cours des matrices sémantiques...") {
+                if (textTarget.innerText === "Analyzing semantic alignment...") {
                     textTarget.innerText = "“ ";
                 }
                 textTarget.innerText += chunkData.text;
@@ -1868,8 +1821,13 @@ eventSource.addEventListener('initial_matches', (event) => {
         });
         
         eventSource.addEventListener('error', (err) => {
+            console.error("Live pipeline error:", err.data || err);
             eventSource.close();
             useLocalFallbackSearch(queryText);
+            resultsContainer.insertAdjacentHTML('afterbegin', `
+                <div style="max-width: 800px; margin: 0 auto 16px auto; padding: 12px 16px; border-radius: 8px; background: #fffaf0; border-left: 4px solid #ffa502; color: #7b5e00; font-size: 13px; text-align: left;">
+                    The live AI engine is unavailable${err.data ? ': ' + escapeHtml(err.data) : ''}. Showing offline partner results instead.
+                </div>`);
         });
     }
 
@@ -1896,7 +1854,7 @@ eventSource.addEventListener('initial_matches', (event) => {
         .then(data => {
             // On injecte le texte de la proposition ET le bouton de copie propre en dessous
             proposalBox.innerHTML = `
-                <div id="proposal-text-${index}" style="margin-bottom: 12px;">${data.proposal}</div>
+                <div id="proposal-text-${index}" style="margin-bottom: 12px;">${escapeHtml(data.proposal)}</div>
                 <button onclick="copyProposalToClipboard(${index})" id="copy-btn-${index}" style="background: #2d3748; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px;">
                     Copy Proposal
                 </button>
