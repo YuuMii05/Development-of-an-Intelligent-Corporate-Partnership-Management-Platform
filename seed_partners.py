@@ -77,7 +77,7 @@ async def seed_database():
             # Call Ollama to generate real math vector coordinates using the 768-dimension model
             response_embed = ollama.embeddings(
                 model="nomic-embed-text", 
-                prompt=combined_text
+                prompt="search_document: " + combined_text  # task prefix expected by nomic-embed-text
             )
             real_vector = response_embed["embedding"]
             

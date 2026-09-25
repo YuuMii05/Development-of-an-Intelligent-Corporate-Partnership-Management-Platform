@@ -34,7 +34,9 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 async def get_local_embedding(text: str):
-    response = await ollama_client.embeddings(model="nomic-embed-text", prompt=text)
+    # nomic-embed-text expects a task prefix: "search_query: " for searches,
+    # "search_document: " for the stored partner profiles (see seed scripts)
+    response = await ollama_client.embeddings(model="nomic-embed-text", prompt="search_query: " + text)
     return response["embedding"]
 
 @app.get("/stream-match")

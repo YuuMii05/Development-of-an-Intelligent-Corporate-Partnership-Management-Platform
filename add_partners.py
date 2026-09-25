@@ -54,7 +54,7 @@ def main():
 
         combined_text = f"{p['company_name']} {p['industry']} {p['objectives']}"
         print(f"  Generating embedding for: {p['company_name']} ...")
-        emb = ollama.embeddings(model="nomic-embed-text", prompt=combined_text)["embedding"]
+        emb = ollama.embeddings(model="nomic-embed-text", prompt="search_document: " + combined_text)["embedding"]  # task prefix expected by nomic-embed-text
 
         supabase.table("partner_profiles").insert({
             "company_name": p["company_name"],

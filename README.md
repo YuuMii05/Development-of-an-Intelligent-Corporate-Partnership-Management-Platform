@@ -94,7 +94,7 @@ de texte par IA, entièrement exécutée en local via Ollama.
 ```
 
 **Étapes d'une recherche**
-* **Vectorisation** : le backend transforme l'idée de projet en **vecteur de 768 dimensions** via le modèle local `nomic-embed-text` (Ollama).
+* **Vectorisation** : le backend transforme l'idée de projet en **vecteur de 768 dimensions** via le modèle local `nomic-embed-text` (Ollama). Comme le recommande ce modèle, la requête est préfixée par `search_query:` et les profils des partenaires par `search_document:`, ce qui améliore la précision du classement.
 * **Classement par similarité** : ce vecteur est envoyé à Supabase, qui exécute la fonction SQL **`match_partners`** calculant la **similarité cosinus** entre la requête et chaque partenaire. Tous les partenaires sont renvoyés, triés du plus pertinent au moins pertinent.
 * **Diagnostic IA** : le modèle `llama3` rédige un **diagnostic d'alignement** pour les 3 meilleurs partenaires, diffusé en **streaming (SSE)** mot par mot. Il n'utilise que les données réelles du partenaire (secteur, capacités, pourcentage de correspondance) et a pour consigne de ne jamais inventer de chiffres.
 * **Proposition commerciale** : sur demande, une **proposition de partenariat B2B** complète est générée, sans montants, dates ni statistiques inventés.
