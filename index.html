@@ -275,6 +275,23 @@
             z-index: 5;
         }
 
+        .ranking-panel { width: 100%; max-width: 800px; margin: 0 auto 4px auto; box-sizing: border-box; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); text-align: left; }
+        .ranking-title { font-size: 15px; font-weight: 700; color: #1a202c; }
+        .ranking-sub { font-size: 12.5px; color: #718096; margin: 4px 0 14px 0; line-height: 1.5; }
+        .rank-row { display: grid; grid-template-columns: 34px minmax(120px, 230px) 1fr 48px; align-items: center; gap: 10px; padding: 5px 6px; border-radius: 6px; cursor: pointer; }
+        .rank-row:hover { background: #f8fafc; }
+        .rank-pos { font-size: 12px; font-weight: 700; color: #a0aec0; font-variant-numeric: tabular-nums; }
+        .rank-name { font-size: 13.5px; font-weight: 600; color: #2d3748; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rank-track { height: 12px; background: #edf2f7; border-radius: 4px; overflow: hidden; }
+        .rank-bar { height: 100%; border-radius: 0 4px 4px 0; background: #a0aec0; }
+        .rank-row.top .rank-bar { background: var(--brand-red); }
+        .rank-row.top .rank-name { color: #1a202c; }
+        .rank-row:hover .rank-bar { filter: brightness(0.9); }
+        .rank-pct { font-size: 13.5px; font-weight: 700; color: #1a202c; text-align: right; font-variant-numeric: tabular-nums; }
+        .ranking-legend { display: flex; gap: 16px; font-size: 12px; color: #718096; margin-top: 12px; flex-wrap: wrap; }
+        .ranking-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+        @media (max-width: 600px) { .rank-row { grid-template-columns: 28px 110px 1fr 42px; } }
+
         .results-list::-webkit-scrollbar { width: 6px; }
         .results-list::-webkit-scrollbar-track { background: transparent; }
         .results-list::-webkit-scrollbar-thumb {
@@ -1609,6 +1626,9 @@
     let eventSource = null;
     let currentMatchNames = [];
 
+    // The AI backend runs on port 8000; when the page is opened with Live Server it calls it there
+    const API_BASE = location.port === '8000' ? '' : 'http://127.0.0.1:8000';
+
     // Official Huawei partner directory (Tunisia): real tier, address and phone for each partner
     const localRealPartners = [
         { name: 'Tunisie Micro Informatique (TMI)', industry: 'Enterprise IT & Solutions Architecture', badge: 'Diamond Reseller', capabilities: 'Data Communication Master, Storage Master, Enterprise Services & Software Master', address: "8 Rue Socrate, Le Kram, Tunis", phone: "+216 71 860 666" },
@@ -1668,6 +1688,14 @@
         queryInput.value = "";
         resultsContainer.innerHTML = "";
         suggestionsPanel.classList.remove('visible');
+    }
+
+    // Opens a partner's detail card from the ranking panel
+    function showPartnerCard(index) {
+        const card = document.getElementById(`partner-card-${index}`);
+        if (!card) return;
+        card.style.display = '';
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function selectSuggestion(text) {
@@ -1763,7 +1791,7 @@
         }
 
         // Connexion au flux SSE du backend live pipeline
-        eventSource = new EventSource(`/stream-match?query=${encodeURIComponent(queryText)}`);
+        eventSource = new EventSource(`${API_BASE}/stream-match?query=${encodeURIComponent(queryText)}`);
         
 // 1. Écouter la réception de la liste des partenaires correspondants
 eventSource.addEventListener('initial_matches', (event) => {
@@ -1774,22 +1802,52 @@ eventSource.addEventListener('initial_matches', (event) => {
         return;
     }
     
-    resultsContainer.innerHTML = "";
-    currentMatchNames = data.matches.map(p => p.company_name);
-    data.matches.forEach((partner, index) => {
-        
-        const matchScore = Math.round(partner.similarity * 100);
+    const TOP_ANALYZED = 3;   // the backend streams a detailed AI analysis for the top 3
+    const matches = data.matches;
+    currentMatchNames = matches.map(p => p.company_name);
 
-        resultsContainer.innerHTML += `
-            <div class="card" style="width: 100%; box-sizing: border-box; max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;">
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <div style="font-size: 20px; font-weight: 700; color: #1a202c;">${escapeHtml(partner.company_name)}</div>
-                    <div style="background: #e60012; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;">
+    // 1a. Ranking of every partner for this project idea
+    const rankingRows = matches.map((partner, index) => {
+        const pct = Math.round(partner.similarity * 100);
+        return `
+            <div class="rank-row${index < TOP_ANALYZED ? ' top' : ''}" onclick="showPartnerCard(${index})"
+                 title="#${index + 1} ${escapeHtml(partner.company_name)}: ${pct}% match. Click to see details">
+                <div class="rank-pos">#${index + 1}</div>
+                <div class="rank-name">${escapeHtml(partner.company_name)}</div>
+                <div class="rank-track"><div class="rank-bar" style="width: ${Math.max(pct, 1)}%"></div></div>
+                <div class="rank-pct">${pct}%</div>
+            </div>`;
+    }).join('');
+
+    let html = `
+        <div class="ranking-panel">
+            <div class="ranking-title">Partner Ranking for this Project</div>
+            <div class="ranking-sub">
+                ${matches.length} partners ranked by semantic match between your project idea and each partner's capabilities.
+                Best match: <strong>${escapeHtml(matches[0].company_name)}</strong> (${Math.round(matches[0].similarity * 100)}%).
+                Click a partner to see its details.
+            </div>
+            ${rankingRows}
+            <div class="ranking-legend">
+                <span><i style="background: var(--brand-red)"></i>Top ${Math.min(TOP_ANALYZED, matches.length)}: detailed AI analysis below</span>
+                <span><i style="background: #a0aec0"></i>Other partners: click to open</span>
+            </div>
+        </div>`;
+
+    // 1b. Detailed card for every partner (top 3 visible, others open from the ranking)
+    matches.forEach((partner, index) => {
+        const matchScore = Math.round(partner.similarity * 100);
+        const isTop = index < TOP_ANALYZED;
+        html += `
+            <div class="card" id="partner-card-${index}" style="width: 100%; box-sizing: border-box; max-width: 800px; margin: 0 auto 20px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; text-align: left;${isTop ? '' : ' display: none;'}">
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 12px;">
+                    <div style="font-size: 20px; font-weight: 700; color: #1a202c;"><span style="color: #a0aec0; font-weight: 700;">#${index + 1}</span> ${escapeHtml(partner.company_name)}</div>
+                    <div style="background: #e60012; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px; white-space: nowrap;">
                         Match : ${matchScore}%
                     </div>
                 </div>
-                
+
                 <div style="color: #718096; font-size: 13px; font-weight: 600; text-transform: uppercase; margin-bottom: 14px;">
                     ${escapeHtml(partner.industry || 'N/A')}
                 </div>
@@ -1804,7 +1862,9 @@ eventSource.addEventListener('initial_matches', (event) => {
                     <div style="font-weight: 700; font-size: 13px; color: #e60012; margin-bottom: 4px; text-transform: uppercase;">
                         AI Alignment Analysis
                     </div>
-                    <span id="ai-text-${index}" class="streaming-text" style="font-size: 14px; color: #2d3748; line-height: 1.5;">Analyzing semantic alignment...</span>
+                    ${isTop
+                        ? `<span id="ai-text-${index}" class="streaming-text" style="font-size: 14px; color: #2d3748; line-height: 1.5;">Analyzing semantic alignment...</span>`
+                        : `<span style="font-size: 14px; color: #718096;">Detailed AI analysis is generated for the top ${TOP_ANALYZED} matches. This partner ranks #${index + 1}.</span>`}
                 </div>
 
                 <div style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 15px;">
@@ -1818,8 +1878,9 @@ eventSource.addEventListener('initial_matches', (event) => {
             </div>
         `;
     });
+    resultsContainer.innerHTML = html;
 });
-        
+
         // 2. Écouter la saisie de texte de l'IA au fur et à mesure (Streaming)
         eventSource.addEventListener('ai_chunk', (event) => {
             const chunkData = JSON.parse(event.data);
@@ -1856,7 +1917,7 @@ eventSource.addEventListener('initial_matches', (event) => {
         // On prépare la boîte en nettoyant les anciens boutons s'il y en avait
         proposalBox.innerHTML = `<div id="proposal-text-${index}">AI Assistant is drafting the formal strategic proposal in English...</div>`;
         
-        fetch('/generate-proposal', {
+        fetch(`${API_BASE}/generate-proposal`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

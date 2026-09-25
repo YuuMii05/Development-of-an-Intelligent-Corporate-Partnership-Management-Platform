@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from sse_starlette.sse import EventSourceResponse
 import ollama
@@ -12,6 +13,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI(title="AI Partner Matching Engine")
+
+# Allow the page to call this API when it is opened through VS Code Live Server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 
 # Only the static/ folder is public (never the project root, which holds .env)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -32,8 +41,9 @@ async def get_local_embedding(text: str):
 async def stream_match(query: str):
     async def event_generator():
         try:
-            MATCH_THRESHOLD = 0.30  
-            MATCH_COUNT = 3
+            MATCH_THRESHOLD = 0.0   # rank every partner, best match first
+            MATCH_COUNT = 100
+            AI_ANALYZED = 3         # the AI writes a detailed analysis for the top partners
 
             # 1. Génération du vecteur et recherche par similarité dans Supabase
             query_vector = await get_local_embedding(query)
@@ -48,9 +58,6 @@ async def stream_match(query: str):
             real_fields = ("id", "company_name", "industry", "objectives", "similarity")
             matches = [{k: m.get(k) for k in real_fields} for m in (result.data or [])]
             
-            # --- LIGNE DE DÉBOGAGE : Regardez votre terminal VS Code pour voir la structure ---
-            print("DONNÉES SUPABASE REÇUES :", matches)
-            
             # 2. Envoi des données des partenaires à l'interface
             yield {
                 "event": "initial_matches",
@@ -58,7 +65,7 @@ async def stream_match(query: str):
             }
             
             # 3. Génération des diagnostics d'alignement par l'IA en streaming (uniquement à partir de données réelles)
-            for idx, partner in enumerate(matches):
+            for idx, partner in enumerate(matches[:AI_ANALYZED]):
                 industry = partner.get("industry") or "Unknown"
                 objectives = partner.get("objectives") or industry
                 similarity = partner.get("similarity")
